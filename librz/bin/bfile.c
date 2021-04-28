@@ -860,10 +860,9 @@ static inline bool add_file_hash(RzMsgDigest *md, const char *name, RzList *list
 	return true;
 }
 
-RZ_API RzList *rz_bin_file_compute_hashes(RzBin *bin, ut64 limit) {
-	rz_return_val_if_fail(bin && bin->cur && bin->cur->o, NULL);
+RZ_API RzList *rz_bin_file_compute_hashes(RzBin *bin, RzBinFile *bf, ut64 limit) {
+	rz_return_val_if_fail(bin && bf && bf->o, NULL);
 	ut64 buf_len = 0, r = 0;
-	RzBinFile *bf = bin->cur;
 	RzBinObject *o = bf->o;
 	RzList *file_hashes = NULL;
 	ut8 *buf = NULL;
