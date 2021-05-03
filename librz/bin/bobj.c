@@ -693,6 +693,7 @@ RZ_API const RzBinAddr *rz_bin_object_get_special_symbol(RzBinObject *o, RzBinSp
 	return o ? o->binsym[sym] : NULL;
 }
 
+// TODO: obj->entries & co should be set here, not somewhere else
 RZ_API const RzList *rz_bin_object_get_entries(RzBinObject *obj) {
 	rz_return_val_if_fail(obj, NULL);
 	return obj->entries;
@@ -745,22 +746,30 @@ RZ_API const RzList *rz_bin_object_get_sections_all(RzBinObject *obj) {
 	return obj->sections;
 }
 
+static RzList *get_sections_or_segment(RzBinObject *obj, bool is_segment) {
+	RzList *res = rz_list_new();
+	if (!res) {
+		return NULL;
+	}
+	const RzList *all = rz_bin_object_get_sections_all(obj);
+	RzListIter *it;
+	RzBinSection *sec;
+	rz_list_foreach(all, it, sec) {
+		if (sec->is_segment == is_segment) {
+			rz_list_append(res, sec);
+		}
+	}
+	return res;
+}
+
 RZ_API RzList *rz_bin_object_get_sections(RzBinObject *obj) {
 	rz_return_val_if_fail(obj, NULL);
-	// TODO: implement me
-	return NULL;
+	return get_sections_or_segment(obj, false);
 }
 
 RZ_API RzList *rz_bin_object_get_segments(RzBinObject *obj) {
 	rz_return_val_if_fail(obj, NULL);
-	// TODO: implement me
-	return NULL;
-}
-
-RZ_API RzList *rz_bin_object_get_hashes(RzBinObject *obj) {
-	rz_return_val_if_fail(obj, NULL);
-	// TODO: implement me
-	return NULL;
+	return get_sections_or_segment(obj, true);
 }
 
 RZ_API const RzList *rz_bin_object_get_classes(RzBinObject *obj) {
