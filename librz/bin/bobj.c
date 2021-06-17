@@ -720,27 +720,6 @@ RZ_API const RzList *rz_bin_object_get_libs(RzBinObject *obj) {
 
 }
 
-RZ_API const RBNode *rz_bin_object_get_relocs(RzBinObject *obj) {
-	rz_return_val_if_fail(obj, NULL);
-	return obj->relocs;
-}
-
-static RzList *relocs_rbtree2list(RBNode *root) {
-	RzList *res = rz_list_new();
-	RzBinReloc *reloc;
-	RBIter it;
-
-	rz_rbtree_foreach (root, it, reloc, RzBinReloc, vrb) {
-		rz_list_append(res, reloc);
-	}
-	return res;
-}
-
-RZ_API RZ_OWN RzList *rz_bin_object_get_relocs_list(RzBinObject *obj) {
-	rz_return_val_if_fail(obj, NULL);
-	return obj->relocs ? relocs_rbtree2list(obj->relocs) : NULL;
-}
-
 RZ_API const RzList *rz_bin_object_get_sections_all(RzBinObject *obj) {
 	rz_return_val_if_fail(obj, NULL);
 	return obj->sections;

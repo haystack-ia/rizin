@@ -1053,5 +1053,5 @@ RZ_API RzList *rz_bin_file_get_trycatch(RzBinFile *bf) {
 RZ_API RzList *rz_bin_file_get_symbols(RzBinFile *bf) {
 	rz_return_val_if_fail(bf, NULL);
 	RzBinObject *o = bf->o;
-	return o ? rz_bin_object_get_symbols(o) : NULL;
+	return o ? (RzList *)rz_bin_object_get_symbols(o) : NULL;
 }

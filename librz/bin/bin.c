@@ -622,19 +622,6 @@ RZ_API RzList *rz_bin_get_libs(RzBin *bin) {
 	return o ? (RzList *)rz_bin_object_get_libs(o) : NULL;
 }
 
-RZ_API RBNode *rz_bin_get_relocs(RzBin *bin) {
-	rz_return_val_if_fail(bin, NULL);
-	RzBinObject *o = rz_bin_cur_object(bin);
-	return o ? (RBNode *)rz_bin_object_get_relocs(o) : NULL;
-}
-
-// return a list of <const RzBinReloc> that needs to be freed by the caller
-RZ_API RzList *rz_bin_get_relocs_list(RzBin *bin) {
-	rz_return_val_if_fail(bin, NULL);
-	RzBinObject *o = rz_bin_cur_object(bin);
-	return o ? (RzList *)rz_bin_object_get_relocs_list(o) : NULL;
-}
-
 RZ_API RzList *rz_bin_get_sections(RzBin *bin) {
 	rz_return_val_if_fail(bin, NULL);
 	RzBinObject *o = rz_bin_cur_object(bin);

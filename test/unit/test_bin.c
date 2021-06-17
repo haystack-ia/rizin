@@ -18,7 +18,6 @@ bool test_rz_bin(void) {
 	mu_assert_notnull(bf->o, "bin object");
 
 	RzBinObject *obj = rz_bin_cur_object(bin);
-	RzBinFile *bf = rz_bin_cur(bin);
 
 	RzList *sections = rz_bin_object_get_sections(obj);
 	mu_assert_eq(rz_list_length(sections), 29, "rz_bin_object_get_sections");
@@ -51,26 +50,6 @@ bool test_rz_bin(void) {
 	for(int i = 0; i < RZ_ARRAY_SIZE(import_names); ++i) {
 		mu_assert_true(has_import_names[i], "Import name was not found");
 	}
-
-	RzList *relocs = rz_bin_object_get_relocs_list(obj);
-	mu_assert_eq(rz_list_length(relocs), 5, "rz_bin_object_get_relocs");
-	const char *reloc_names[] = {"__libc_start_main", "printf", "scanf", "strcmp", "__gmon_start__"};
-	ut64 reloc_offsets[] = {0x804a000, 0x804a008, 0x804a004, 0x804a00c, 0x8049ff0};
-	bool has_reloc_names[] = {0};
-	RzBinReloc *reloc;
-	rz_list_foreach(relocs, it, reloc) {
-		for(int i = 0; i < RZ_ARRAY_SIZE(reloc_names); ++i) {
-			if (!strcmp(reloc->import->name, reloc_names[i])) {
-				has_reloc_names[i] = true;
-				mu_assert_eq(reloc->vaddr, reloc_offsets[i], "Reloc vaddr wrong value");
-				break;
-			}
-		}
-	}
-	for(int i = 0; i < RZ_ARRAY_SIZE(reloc_names); ++i) {
-		mu_assert_true(has_reloc_names[i], "Reloc name was not found");
-	}
-	rz_list_free(relocs);
 
 	const RzList *strings = rz_bin_object_get_strings(obj);
 	mu_assert_eq(rz_list_length(strings), 5, "rz_bin_object_get_strings");
