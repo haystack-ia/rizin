@@ -179,7 +179,7 @@ RZ_IPI int rz_cmd_egg(void *data, const char *input);
 RZ_IPI RzCmdStatus rz_history_list_or_exec_handler(RzCore *core, int argc, const char **argv);
 RZ_IPI RzCmdStatus rz_history_clear_handler(RzCore *core, int argc, const char **argv);
 RZ_IPI RzCmdStatus rz_history_save_handler(RzCore *core, int argc, const char **argv);
-RZ_IPI int rz_cmd_info(void *data, const char *input);
+RZ_IPI RzCmdStatus rz_cmd_info_archs_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
 RZ_IPI int rz_cmd_kuery(void *data, const char *input);
 RZ_IPI RzCmdStatus rz_ls_handler(RzCore *core, int argc, const char **argv);
 RZ_IPI int rz_cmd_m(void *data, const char *input);

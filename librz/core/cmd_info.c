@@ -605,16 +605,6 @@ RZ_IPI int rz_cmd_info(void *data, const char *input) {
 		pj_k(pj, n); \
 	} \
 	rz_core_bin_info(core, x, pj, mode, va, NULL, y);
-		case 'A': // "iA"
-			if (input[1] == 'j') {
-				pj_o(pj);
-				rz_bin_list_archs(core->bin, pj, 'j');
-				pj_end(pj);
-			} else {
-				rz_bin_list_archs(core->bin, NULL, 1);
-				newline = false;
-			}
-			break;
 		case 'E': // "iE"
 		{
 			if (input[1] == 'j' && input[2] == '.') {
@@ -1247,4 +1237,9 @@ done:
 	}
 redone:
 	return 0;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_archs_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_archs_print(core->bin, state);
+	return RZ_CMD_STATUS_OK;
 }

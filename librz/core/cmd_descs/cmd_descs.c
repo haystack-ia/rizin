@@ -2492,8 +2492,15 @@ static const RzCmdDescHelp history_save_help = {
 	.args = history_save_args,
 };
 
-static const RzCmdDescHelp cmd_info_help = {
+static const RzCmdDescHelp i_help = {
 	.summary = "Get info about opened binary file",
+};
+static const RzCmdDescArg cmd_info_archs_args[] = {
+	{ 0 },
+};
+static const RzCmdDescHelp cmd_info_archs_help = {
+	.summary = "List archs",
+	.args = cmd_info_archs_args,
 };
 
 static const RzCmdDescHelp cmd_kuery_help = {
@@ -5492,8 +5499,10 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	RzCmdDesc *history_save_cd = rz_cmd_desc_argv_new(core->rcmd, H_cd, "H+", rz_history_save_handler, &history_save_help);
 	rz_warn_if_fail(history_save_cd);
 
-	RzCmdDesc *cmd_info_cd = rz_cmd_desc_oldinput_new(core->rcmd, root_cd, "i", rz_cmd_info, &cmd_info_help);
-	rz_warn_if_fail(cmd_info_cd);
+	RzCmdDesc *i_cd = rz_cmd_desc_group_new(core->rcmd, root_cd, "i", NULL, NULL, &i_help);
+	rz_warn_if_fail(i_cd);
+	RzCmdDesc *cmd_info_archs_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iA", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_archs_handler, &cmd_info_archs_help);
+	rz_warn_if_fail(cmd_info_archs_cd);
 
 	RzCmdDesc *cmd_kuery_cd = rz_cmd_desc_oldinput_new(core->rcmd, root_cd, "k", rz_cmd_kuery, &cmd_kuery_help);
 	rz_warn_if_fail(cmd_kuery_cd);

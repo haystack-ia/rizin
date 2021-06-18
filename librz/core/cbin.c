@@ -4956,3 +4956,85 @@ RZ_API RzCmdStatus rz_core_bin_plugins_print(RzBin *bin, RzCmdStateOutput *state
 	rz_cmd_state_output_array_end(state);
 	return RZ_CMD_STATUS_OK;
 }
+
+static void print_arch(RzBin *bin, RzCmdStateOutput *state, int num, ut64 offset, ut64 size,
+	const char *arch, int bits, const char *machine, const char *flag, RzBinInfo *info) {
+
+	char str_fmt[30];
+	const char *fmt = "dXnss";
+
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_QUIET:
+		rz_cons_printf("%s\n", arch);
+		break;
+	case RZ_OUTPUT_MODE_JSON:
+		pj_o(state->d.pj);
+		pj_ks(state->d.pj, "arch", arch);
+		pj_ki(state->d.pj, "bits", bits);
+		pj_kn(state->d.pj, "offset", offset);
+		pj_kn(state->d.pj, "size", size);
+		if (info && !strcmp(arch, "mips")) {
+			pj_ks(state->d.pj, "isa", info->cpu);
+			pj_ks(state->d.pj, "features", info->features);
+		}
+		if (machine) {
+			pj_ks(state->d.pj, "machine", machine);
+		}
+		pj_end(state->d.pj);
+		break;
+	case RZ_OUTPUT_MODE_TABLE:
+	case RZ_OUTPUT_MODE_STANDARD:
+		if (flag && strcmp(flag, "unknown_flag")) {
+			rz_strf(str_fmt, "%s_%i %s", arch, bits, flag);
+		} else {
+			rz_strf(str_fmt, "%s_%i", arch, bits);
+		}
+		rz_table_add_rowf(state->d.t, fmt, 0, offset, size, str_fmt, machine);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+}
+
+RZ_API void rz_core_bin_archs_print(RzBin *bin, RzCmdStateOutput *state) {
+	rz_return_if_fail(bin);
+
+	RzBinFile *binfile = rz_bin_cur(bin);
+	if (!binfile) {
+		return;
+	}
+
+	const char *fmt = "dXnss";
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, fmt, "num", "offset", "size", "arch", "machine", NULL);
+
+	if (binfile->curxtr) {
+		RzListIter *iter_xtr;
+		RzBinXtrData *xtr_data;
+		int i = 0;
+		rz_list_foreach (binfile->xtr_data, iter_xtr, xtr_data) {
+			if (!xtr_data || !xtr_data->metadata ||
+				!xtr_data->metadata->arch) {
+				continue;
+			}
+			char *arch = xtr_data->metadata->arch;
+			char *machine = xtr_data->metadata->machine;
+			int bits = xtr_data->metadata->bits;
+
+			print_arch(bin, state, i++, xtr_data->offset, xtr_data->size, arch, bits, machine, NULL, NULL);
+		}
+	} else {
+		RzBinObject *obj = binfile->o;
+		RzBinInfo *info = obj->info;
+		char bits = info ? info->bits : 0;
+		ut64 boffset = obj->boffset;
+		ut64 obj_size = obj->obj_size;
+		const char *arch = info ? info->arch : "unk_0";
+		const char *machine = info ? info->machine : "unknown_machine";
+		const char *h_flag = info ? info->head_flag : NULL;
+		print_arch(bin, state, 0, boffset, obj_size, arch, bits, machine, h_flag, info);
+	}
+
+	rz_cmd_state_output_array_end(state);
+}
