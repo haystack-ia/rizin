@@ -103,6 +103,7 @@ RZ_IPI void rz_core_bin_entries_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_bin_initfini_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_bin_exports_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_bin_symbols_print(RzCore *core, RzCmdStateOutput *state);
+RZ_IPI void rz_core_bin_imports_print(RzCore *core, RzCmdStateOutput *state);
 
 /* cdebug.c */
 RZ_IPI bool rz_core_debug_reg_set(RzCore *core, const char *regname, ut64 val, const char *strval);

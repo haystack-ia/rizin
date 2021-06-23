@@ -2477,6 +2477,87 @@ RZ_IPI void rz_core_bin_exports_print(RzCore *core, RzCmdStateOutput *state) {
 	symbols_print(core, state, true);
 }
 
+RZ_IPI void rz_core_bin_imports_print(RzCore *core, RzCmdStateOutput *state) {
+	int bin_demangle = rz_config_get_i(core->config, "bin.demangle");
+	bool keep_lib = rz_config_get_i(core->config, "bin.demangle.libs");
+	int va = (core->io->va || core->bin->is_debugger) ? VA_TRUE : VA_FALSE;
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	RzBinObject *o = bf ? bf->o : NULL;
+	const RzList *imports = rz_bin_object_get_imports(o);
+	RzBinImport *import;
+	RzListIter *iter;
+	char name[100];
+
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, "nXssss", "nth", "vaddr", "bind", "type", "lib", "name");
+
+	rz_list_foreach (imports, iter, import) {
+		if (!import->name) {
+			continue;
+		}
+		char *symname = import->name ? strdup(import->name) : NULL;
+		char *libname = import->libname ? strdup(import->libname) : NULL;
+		RzBinSymbol *sym = rz_bin_object_get_symbol_of_import(o, import);
+		ut64 addr = sym ? rva(o, sym->paddr, sym->vaddr, va) : UT64_MAX;
+		if (bin_demangle) {
+			char *dname = rz_bin_demangle(core->bin->cur, NULL, symname, addr, keep_lib);
+			if (dname) {
+				free(symname);
+				symname = rz_str_newf("sym.imp.%s", dname);
+				free(dname);
+			}
+		}
+		if (core->bin->prefix) {
+			char *prname = rz_str_newf("%s.%s", core->bin->prefix, symname);
+			free(symname);
+			symname = prname;
+		}
+		switch(state->mode) {
+		case RZ_OUTPUT_MODE_QUIET:
+			rz_cons_printf("%s%s%s\n", libname ? libname : "", libname ? " " : "", symname);
+			break;
+		case RZ_OUTPUT_MODE_JSON:
+			pj_o(state->d.pj);
+			pj_ki(state->d.pj, "ordinal", import->ordinal);
+			if (import->bind) {
+				pj_ks(state->d.pj, "bind", import->bind);
+			}
+			if (import->type) {
+				pj_ks(state->d.pj, "type", import->type);
+			}
+			if (import->classname && import->classname[0]) {
+				pj_ks(state->d.pj, "classname", import->classname);
+				pj_ks(state->d.pj, "descriptor", import->descriptor);
+			}
+			pj_ks(state->d.pj, "name", symname);
+			if (libname) {
+				pj_ks(state->d.pj, "libname", libname);
+			}
+			if (addr != UT64_MAX) {
+				pj_kn(state->d.pj, "plt", addr);
+			}
+			pj_end(state->d.pj);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			rz_table_add_rowf(state->d.t, "nXssss",
+				(ut64)import->ordinal,
+				addr,
+				import->bind ? import->bind : "NONE",
+				import->type ? import->type : "NONE",
+				libname ? libname : "",
+				RZ_STR_ISNOTEMPTY(import->classname) ? rz_strf(name, "%s.%s", import->classname, symname) : symname);
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+		RZ_FREE(symname);
+		RZ_FREE(libname);
+	}
+
+	rz_cmd_state_output_array_end(state);
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure
