@@ -2558,6 +2558,31 @@ RZ_IPI void rz_core_bin_imports_print(RzCore *core, RzCmdStateOutput *state) {
 	rz_cmd_state_output_array_end(state);
 }
 
+RZ_IPI void rz_core_bin_libs_print(RzCore *core, RzCmdStateOutput *state) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	RzBinObject *o = bf ? bf->o : NULL;
+	const RzList *libs = rz_bin_object_get_libs(o);
+	RzListIter *iter;
+	char *lib;
+
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, "s", "library");
+	rz_list_foreach (libs, iter, lib) {
+		switch(state->mode) {
+		case RZ_OUTPUT_MODE_JSON:
+			pj_s(state->d.pj, lib);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			rz_table_add_rowf(state->d.t, "s", lib);
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+	}
+	rz_cmd_state_output_array_end(state);
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure

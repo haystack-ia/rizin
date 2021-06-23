@@ -5801,7 +5801,7 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	rz_warn_if_fail(cmd_info_kuery_cd);
 	rz_cmd_desc_set_default_mode(cmd_info_kuery_cd, RZ_OUTPUT_MODE_TABLE);
 
-	RzCmdDesc *cmd_info_libs_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "il", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_libs_help);
+	RzCmdDesc *cmd_info_libs_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "il", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_libs_handler, &cmd_info_libs_help);
 	rz_warn_if_fail(cmd_info_libs_cd);
 	rz_cmd_desc_set_default_mode(cmd_info_libs_cd, RZ_OUTPUT_MODE_TABLE);
 
