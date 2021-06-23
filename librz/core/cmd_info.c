@@ -1243,3 +1243,17 @@ RZ_IPI RzCmdStatus rz_cmd_info_archs_handler(RzCore *core, int argc, const char 
 	rz_core_bin_archs_print(core->bin, state);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_entry_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_entries_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_entryexits_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_initfini_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	return RZ_CMD_STATUS_ERROR;
+}

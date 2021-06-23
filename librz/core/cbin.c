@@ -2321,6 +2321,76 @@ static const char *bin_reloc_type_name(RzBinReloc *reloc) {
 #undef CASE
 }
 
+static void entries_initfini_print(RzCore *core, RzCmdStateOutput *state, bool initfini) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	RzBinObject *o = bf ? bf->o : NULL;
+	const RzList *entries = rz_bin_object_get_entries(o);
+	RzListIter *iter;
+	RzBinAddr *entry = NULL;
+	ut64 baddr = rz_bin_get_baddr(core->bin);
+	ut64 laddr = rz_bin_get_laddr(core->bin);
+	int va = (core->io->va || core->bin->is_debugger) ? VA_TRUE : VA_FALSE;
+
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, "XXXXs", "vaddr", "paddr", "hvaddr", "haddr", "type");
+
+	rz_list_foreach (entries, iter, entry) {
+		ut64 paddr = entry->paddr;
+		ut64 hpaddr = UT64_MAX;
+		ut64 hvaddr = UT64_MAX;
+		if (!initfini && entry->type != RZ_BIN_ENTRY_TYPE_PROGRAM) {
+			continue;
+		} else if (initfini && entry->type == RZ_BIN_ENTRY_TYPE_PROGRAM) {
+			continue;
+		}
+		if (entry->hpaddr) {
+			hpaddr = entry->hpaddr;
+			if (entry->hvaddr) {
+				hvaddr = rva(o, hpaddr, entry->hvaddr, va);
+			}
+		}
+		ut64 at = rva(o, paddr, entry->vaddr, va);
+		const char *type = rz_bin_entry_type_string(entry->type);
+		if (!type) {
+			type = "unknown";
+		}
+		switch(state->mode) {
+		case RZ_OUTPUT_MODE_QUIET:
+			rz_cons_printf("0x%08" PFMT64x "\n", at);
+			break;
+		case RZ_OUTPUT_MODE_JSON:
+			pj_o(state->d.pj);
+			pj_kn(state->d.pj, "vaddr", at);
+			pj_kn(state->d.pj, "paddr", paddr);
+			pj_kn(state->d.pj, "baddr", baddr);
+			pj_kn(state->d.pj, "laddr", laddr);
+			if (hvaddr != UT64_MAX) {
+				pj_kn(state->d.pj, "hvaddr", hvaddr);
+			}
+			pj_kn(state->d.pj, "haddr", hpaddr);
+			pj_ks(state->d.pj, "type", type);
+			pj_end(state->d.pj);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			rz_table_add_rowf(state->d.t, "XXXXs", at, paddr, hvaddr, hpaddr, type);
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+	}
+
+	rz_cmd_state_output_array_end(state);
+}
+
+RZ_IPI void rz_core_bin_initfini_print(RzCore *core, RzCmdStateOutput *state) {
+	entries_initfini_print(core, state, true);
+}
+
+RZ_IPI void rz_core_bin_entries_print(RzCore *core, RzCmdStateOutput *state) {
+	entries_initfini_print(core, state, false);
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure

@@ -98,6 +98,10 @@ RZ_IPI void rz_core_agraph_print_json(RzCore *core);
 RZ_IPI void rz_core_agraph_print_gml(RzCore *core);
 RZ_IPI void rz_core_agraph_print_write(RzCore *core, const char *filename);
 
+/* cbin.c */
+RZ_IPI void rz_core_bin_entries_print(RzCore *core, RzCmdStateOutput *state);
+RZ_IPI void rz_core_bin_initfini_print(RzCore *core, RzCmdStateOutput *state);
+
 /* cdebug.c */
 RZ_IPI bool rz_core_debug_reg_set(RzCore *core, const char *regname, ut64 val, const char *strval);
 RZ_IPI bool rz_core_debug_reg_list(RzCore *core, int type, int size, PJ *pj, int rad, const char *use_color);
