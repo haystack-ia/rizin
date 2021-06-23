@@ -88,7 +88,6 @@ commands:
       - RZ_OUTPUT_MODE_QUIET
     args: []
   - name: iE
-    handler: cmd_info
     cname: cmd_info_exports
     summary: Show info of current file
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
@@ -220,7 +219,6 @@ commands:
       - RZ_OUTPUT_MODE_QUIET
     args: []
   - name: is
-    handler: cmd_info
     cname: cmd_info_symbols
     summary: Show info of current file
     type: RZ_CMD_DESC_TYPE_ARGV_STATE

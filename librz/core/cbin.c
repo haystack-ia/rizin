@@ -2391,6 +2391,92 @@ RZ_IPI void rz_core_bin_entries_print(RzCore *core, RzCmdStateOutput *state) {
 	entries_initfini_print(core, state, false);
 }
 
+static bool isAnExport(RzBinSymbol *s) {
+	/* workaround for some bin plugs */
+	if (s->is_imported) {
+		return false;
+	}
+	return (s->bind && !strcmp(s->bind, RZ_BIN_BIND_GLOBAL_STR));
+}
+
+static void symbols_print(RzCore *core, RzCmdStateOutput *state, bool only_export) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	RzBinObject *o = bf ? bf->o : NULL;
+	const RzList *symbols = rz_bin_object_get_symbols(o);
+	bool bin_demangle = rz_config_get_i(core->config, "bin.demangle");
+	const char *lang = bin_demangle ? rz_config_get(core->config, "bin.lang") : NULL;
+	int va = (core->io->va || core->bin->is_debugger) ? VA_TRUE : VA_FALSE;
+	RzBinSymbol *symbol;
+	RzListIter *iter;
+
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, "dXXssdss", "nth", "paddr", "vaddr", "bind", "type", "size", "lib", "name");
+
+	rz_list_foreach (symbols, iter, symbol) {
+		if (!symbol->name) {
+			continue;
+		}
+		if (only_export && !isAnExport(symbol)) {
+			continue;
+		}
+		ut64 addr = rva(o, symbol->paddr, symbol->vaddr, va);
+		SymName sn = { 0 };
+		sym_name_init(core, &sn, symbol, lang);
+		char *rz_symbol_name = rz_str_escape_utf8(sn.name, false, true);
+
+		switch(state->mode) {
+		case RZ_OUTPUT_MODE_QUIET:
+			rz_cons_printf("0x%08" PFMT64x " %d %s%s%s\n",
+				addr, (int)symbol->size,
+				sn.libname ? sn.libname : "", sn.libname ? " " : "",
+				sn.demname ? sn.demname : rz_symbol_name);
+			break;
+		case RZ_OUTPUT_MODE_JSON:
+			pj_o(state->d.pj);
+			pj_ks(state->d.pj, "name", rz_symbol_name);
+			if (sn.demname) {
+				pj_ks(state->d.pj, "demname", sn.demname);
+			}
+			pj_ks(state->d.pj, "flagname", sn.nameflag);
+			pj_ks(state->d.pj, "realname", symbol->name);
+			pj_ki(state->d.pj, "ordinal", symbol->ordinal);
+			pj_ks(state->d.pj, "bind", symbol->bind);
+			pj_kn(state->d.pj, "size", (ut64)symbol->size);
+			pj_ks(state->d.pj, "type", symbol->type);
+			pj_kn(state->d.pj, "vaddr", addr);
+			pj_kn(state->d.pj, "paddr", symbol->paddr);
+			pj_kb(state->d.pj, "is_imported", symbol->is_imported);
+			pj_end(state->d.pj);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			rz_table_add_rowf(state->d.t, "dXXssdss",
+				symbol->ordinal,
+				symbol->paddr,
+				addr,
+				symbol->bind ? symbol->bind : "NONE",
+				symbol->type ? symbol->type : "NONE",
+				symbol->size,
+				symbol->libname ? symbol->libname : "", // for 'is' libname empty
+				rz_str_get_null(sn.demname ? sn.demname : sn.name));
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+		sym_name_fini(&sn);
+		free(rz_symbol_name);
+	}
+	rz_cmd_state_output_array_end(state);
+}
+
+RZ_IPI void rz_core_bin_symbols_print(RzCore *core, RzCmdStateOutput *state) {
+	symbols_print(core, state, false);
+}
+
+RZ_IPI void rz_core_bin_exports_print(RzCore *core, RzCmdStateOutput *state) {
+	symbols_print(core, state, true);
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure
@@ -2680,14 +2766,6 @@ static int bin_imports(RzCore *r, PJ *pj, int mode, int va, const char *name) {
 
 	rz_table_free(table);
 	return true;
-}
-
-static bool isAnExport(RzBinSymbol *s) {
-	/* workaround for some bin plugs */
-	if (s->is_imported) {
-		return false;
-	}
-	return (s->bind && !strcmp(s->bind, RZ_BIN_BIND_GLOBAL_STR));
 }
 
 static int bin_symbols(RzCore *r, PJ *pj, int mode, int va, ut64 at, const char *name, bool exponly, const char *args) {
