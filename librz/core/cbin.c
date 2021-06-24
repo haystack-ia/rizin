@@ -2583,6 +2583,37 @@ RZ_IPI void rz_core_bin_libs_print(RzCore *core, RzCmdStateOutput *state) {
 	rz_cmd_state_output_array_end(state);
 }
 
+RZ_IPI void rz_core_bin_main_print(RzCore *core, RzCmdStateOutput *state) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	RzBinObject *o = bf ? bf->o : NULL;
+	int va = (core->io->va || core->bin->is_debugger) ? VA_TRUE : VA_FALSE;
+	const RzBinAddr *binmain = rz_bin_object_get_special_symbol(o, RZ_BIN_SPECIAL_SYMBOL_MAIN);
+	if (!binmain) {
+		return;
+	}
+
+	ut64 addr = va ? rz_bin_object_addr_with_base(o, binmain->vaddr) : binmain->paddr;
+	rz_cmd_state_output_set_columnsf(state, "XX", "vaddr", "paddr");
+
+	switch(state->mode) {
+	case RZ_OUTPUT_MODE_QUIET:
+		rz_cons_printf("%" PFMT64d, addr);
+		break;
+	case RZ_OUTPUT_MODE_JSON:
+		pj_o(state->d.pj);
+		pj_kn(state->d.pj, "vaddr", addr);
+		pj_kn(state->d.pj, "paddr", binmain->paddr);
+		pj_end(state->d.pj);
+		break;
+	case RZ_OUTPUT_MODE_TABLE:
+		rz_table_add_rowf(state->d.t, "XX", addr, binmain->paddr);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure
