@@ -2614,6 +2614,117 @@ RZ_IPI void rz_core_bin_main_print(RzCore *core, RzCmdStateOutput *state) {
 	}
 }
 
+RZ_IPI void rz_core_bin_relocs_print(RzCore *core, RzCmdStateOutput *state) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	RzBinObject *o = bf ? bf->o : NULL;
+	bool bin_demangle = rz_config_get_i(core->config, "bin.demangle");
+	bool keep_lib = rz_config_get_i(core->config, "bin.demangle.libs");
+	const char *lang = rz_config_get(core->config, "bin.lang");
+	int va = VA_TRUE; // XXX relocs always vaddr?
+	char *name = NULL;
+
+	RzBinRelocStorage *relocs = rz_bin_object_patch_relocs(bf, o);
+	if (!relocs) {
+		RZ_LOG_WARN("Could not get relocations for current bin file.\n");
+		return;
+	}
+	bool have_targets = rz_bin_reloc_storage_targets_available(relocs);
+	if (have_targets) {
+		rz_cmd_state_output_set_columnsf(state, "XXXss", "vaddr", "paddr", "target", "type", "name");
+	} else {
+		rz_cmd_state_output_set_columnsf(state, "XXss", "vaddr", "paddr", "type", "name");
+	}
+
+	rz_cmd_state_output_array_start(state);
+	for (size_t i = 0; i < relocs->relocs_count; i++) {
+		RzBinReloc *reloc = relocs->relocs[i];
+		ut64 addr = rva(o, reloc->paddr, reloc->vaddr, va);
+
+		switch(state->mode) {
+		case RZ_OUTPUT_MODE_QUIET:
+			rz_cons_printf("0x%08" PFMT64x "  %s\n", addr, reloc->import ? reloc->import->name : "");
+			break;
+		case RZ_OUTPUT_MODE_JSON:
+			pj_o(state->d.pj);
+			char *mn = NULL;
+			char *relname = NULL;
+
+			// take care with very long symbol names! do not use sdb_fmt or similar
+			if (reloc->import) {
+				mn = rz_bin_demangle(core->bin->cur, lang, reloc->import->name, addr, keep_lib);
+				relname = strdup(reloc->import->name);
+			} else if (reloc->symbol) {
+				mn = rz_bin_demangle(core->bin->cur, lang, reloc->symbol->name, addr, keep_lib);
+				relname = strdup(reloc->symbol->name);
+			}
+
+			// check if name is available
+			if (!RZ_STR_ISEMPTY(relname)) {
+				pj_ks(state->d.pj, "name", relname);
+			}
+			pj_ks(state->d.pj, "demname", rz_str_get(mn));
+			pj_ks(state->d.pj, "type", bin_reloc_type_name(reloc));
+			pj_kn(state->d.pj, "vaddr", reloc->vaddr);
+			pj_kn(state->d.pj, "paddr", reloc->paddr);
+			if (rz_bin_reloc_has_target(reloc)) {
+				pj_kn(state->d.pj, "target_vaddr", reloc->target_vaddr);
+			}
+			if (reloc->symbol) {
+				pj_kn(state->d.pj, "sym_va", reloc->symbol->vaddr);
+			}
+			pj_kb(state->d.pj, "is_ifunc", reloc->is_ifunc);
+			pj_end(state->d.pj);
+
+			free(mn);
+			free(relname);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			name = reloc->import
+				? strdup(reloc->import->name)
+				: reloc->symbol ? strdup(reloc->symbol->name)
+						: NULL;
+			if (bin_demangle) {
+				char *mn = rz_bin_demangle(core->bin->cur, NULL, name, addr, keep_lib);
+				if (mn && *mn) {
+					free(name);
+					name = mn;
+				}
+			}
+			char *reloc_name = construct_reloc_name(reloc, name);
+			RzStrBuf *buf = rz_strbuf_new(rz_str_get(reloc_name));
+			free(reloc_name);
+			RZ_FREE(name);
+			if (reloc->addend) {
+				if ((reloc->import || reloc->symbol) && !rz_strbuf_is_empty(buf) && reloc->addend > 0) {
+					rz_strbuf_append(buf, " +");
+				}
+				if (reloc->addend < 0) {
+					rz_strbuf_appendf(buf, " - 0x%08" PFMT64x, -reloc->addend);
+				} else {
+					rz_strbuf_appendf(buf, " 0x%08" PFMT64x, reloc->addend);
+				}
+			}
+			if (reloc->is_ifunc) {
+				rz_strbuf_append(buf, " (ifunc)");
+			}
+			char *res = rz_strbuf_drain(buf);
+			if (have_targets) {
+				rz_table_add_rowf(state->d.t, "XXXss", addr, reloc->paddr, reloc->target_vaddr,
+					bin_reloc_type_name(reloc), res);
+			} else {
+				rz_table_add_rowf(state->d.t, "XXss", addr, reloc->paddr,
+					bin_reloc_type_name(reloc), res);
+			}
+			free(res);
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+	}
+	rz_cmd_state_output_array_end(state);
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure

@@ -194,7 +194,6 @@ commands:
       - RZ_OUTPUT_MODE_QUIET
     args: []
   - name: ir
-    handler: cmd_info
     cname: cmd_info_relocs
     summary: Show info of current file
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
