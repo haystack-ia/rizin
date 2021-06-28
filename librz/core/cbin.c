@@ -2725,6 +2725,193 @@ RZ_IPI void rz_core_bin_relocs_print(RzCore *core, RzCmdStateOutput *state) {
 	rz_cmd_state_output_array_end(state);
 }
 
+static ut64 get_section_addr(RzCore *core, RzBinObject *o, RzBinSection *section) {
+	int va = (core->io->va || core->bin->is_debugger) ? VA_TRUE : VA_FALSE;
+	if (va && !(section->perm & RZ_PERM_R)) {
+		va = VA_NOREBASE;
+	}
+	return rva(o, section->paddr, section->vaddr, va);
+}
+
+static void sections_print_json(RzCore *core, PJ *pj, RzBinObject *o, RzBinSection *section, RzList *hashes) {
+	ut64 addr = get_section_addr(core, o, section);
+	char perms[5];
+	section_perms_str(perms, section->perm);
+
+	pj_o(pj);
+	pj_ks(pj, "name", section->name);
+	pj_kN(pj, "size", section->size);
+	pj_kN(pj, "vsize", section->vsize);
+	pj_ks(pj, "perm", perms);
+	if (!section->is_segment) {
+		char *section_type = rz_bin_section_type_to_string(core->bin, section->type);
+		if (section_type) {
+			pj_ks(pj, "type", section_type);
+		}
+		free(section_type);
+	}
+	if (!section->is_segment) {
+		RzList *flags = rz_bin_section_flag_to_list(core->bin, section->flags);
+		if (!rz_list_empty(flags)) {
+			RzListIter *it;
+			char *pos;
+			pj_ka(pj, "flags");
+			rz_list_foreach (flags, it, pos) {
+				pj_s(pj, pos);
+			}
+			pj_end(pj);
+		}
+		rz_list_free(flags);
+	}
+	pj_kN(pj, "paddr", section->paddr);
+	pj_kN(pj, "vaddr", addr);
+	if (section->align) {
+		pj_kN(pj, "align", section->align);
+	}
+	if (hashes && section->size > 0) {
+		ut8 *data = malloc(section->size);
+		if (data) {
+			ut32 datalen = section->size;
+			RzListIter *iter;
+			char *hashname;
+
+			rz_io_pread_at(core->io, section->paddr, data, datalen);
+
+			rz_list_foreach (hashes, iter, hashname) {
+				char *chkstr = rz_msg_digest_calculate_small_block_string(hashname, data, datalen, NULL, false);
+				if (!chkstr) {
+					continue;
+				}
+				pj_ks(pj, hashname, chkstr);
+				free(chkstr);
+			}
+			free(data);
+		}
+	}
+	pj_end(pj);
+}
+
+static void sections_print_table(RzCore *core, RzTable *t, RzBinObject *o, RzBinSection *section, RzList *hashes) {
+	ut64 addr = get_section_addr(core, o, section);
+	char perms[5];
+	section_perms_str(perms, section->perm);
+
+	RzList *row_list = rz_list_newf(free);
+	if (!row_list) {
+		return;
+	}
+	char *section_type = NULL;
+	if (!section->is_segment) {
+		section_type = rz_bin_section_type_to_string(core->bin, section->type);
+	}
+	char *section_flags_str = NULL;
+	if (!section->is_segment) {
+		RzList *section_flags = rz_bin_section_flag_to_list(core->bin, section->flags);
+		section_flags_str = rz_str_list_join(section_flags, ",");
+		rz_list_free(section_flags);
+	}
+
+	rz_table_add_rowf(t, "XxXxss", section->paddr, section->size, addr, section->vsize, perms, section->name);
+	if (!section->is_segment) {
+		rz_table_add_row_columnsf(t, "ss", section_type, section_flags_str);
+	}
+	rz_table_add_row_columnsf(t, "x", section->align);
+	if (hashes && section->size > 0) {
+		ut8 *data = malloc(section->size);
+		if (data) {
+			ut32 datalen = section->size;
+			RzListIter *iter;
+			char *hashname;
+
+			rz_io_pread_at(core->io, section->paddr, data, datalen);
+
+			rz_list_foreach (hashes, iter, hashname) {
+				const RzMsgDigestPlugin *msg_plugin = rz_msg_digest_plugin_by_name(hashname);
+				if (!msg_plugin) {
+					continue;
+				}
+				char *chkstr = rz_msg_digest_calculate_small_block_string(hashname, data, datalen, NULL, false);
+				if (!chkstr) {
+					rz_table_add_row_columnsf(t, "s", NULL);
+					continue;
+				}
+				rz_table_add_row_columnsf(t, "s", chkstr);
+				free(chkstr);
+			}
+			free(data);
+		}
+	}
+}
+
+RZ_IPI void rz_core_bin_sections_print(RzCore *core, RzCmdStateOutput *state, RzList *hashes) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	RzBinObject *o = bf ? bf->o : NULL;
+	const RzList *sections = rz_bin_object_get_sections(o);
+	RzBinSection *section;
+	RzListIter *iter;
+	char *hashname;
+
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, "XxXxssssx", "paddr", "size", "vaddr", "vsize", "perm", "name", "type", "flags", "align");
+
+	rz_list_foreach(hashes, iter, hashname) {
+		const RzMsgDigestPlugin *msg_plugin = rz_msg_digest_plugin_by_name(hashname);
+		if (msg_plugin) {
+			rz_cmd_state_output_set_columnsf(state, "s", msg_plugin->name);
+		}
+	}
+
+	rz_list_foreach (sections, iter, section) {
+		switch(state->mode) {
+		case RZ_OUTPUT_MODE_JSON:
+			sections_print_json(core, state->d.pj, o, section, hashes);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			sections_print_table(core, state->d.t, o, section, hashes);
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+	}
+
+	rz_cmd_state_output_array_end(state);
+}
+
+RZ_IPI void rz_core_bin_segments_print(RzCore *core, RzCmdStateOutput *state, RzList *hashes) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	RzBinObject *o = bf ? bf->o : NULL;
+	const RzList *segments = rz_bin_object_get_segments(o);
+	RzBinSection *segment;
+	RzListIter *iter;
+	char *hashname;
+
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, "XxXxssx", "paddr", "size", "vaddr", "vsize", "perm", "name", "align");
+
+	rz_list_foreach(hashes, iter, hashname) {
+		const RzMsgDigestPlugin *msg_plugin = rz_msg_digest_plugin_by_name(hashname);
+		if (msg_plugin) {
+			rz_cmd_state_output_set_columnsf(state, "s", msg_plugin->name);
+		}
+	}
+
+	rz_list_foreach (segments, iter, segment) {
+		switch(state->mode) {
+		case RZ_OUTPUT_MODE_JSON:
+			sections_print_json(core, state->d.pj, o, segment, hashes);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			sections_print_table(core, state->d.t, o, segment, hashes);
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+	}
+
+	rz_cmd_state_output_array_end(state);
+}
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure

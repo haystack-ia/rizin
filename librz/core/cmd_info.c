@@ -1284,6 +1284,26 @@ RZ_IPI RzCmdStatus rz_cmd_info_relocs_handler(RzCore *core, int argc, const char
 	return RZ_CMD_STATUS_OK;
 }
 
+RZ_IPI RzCmdStatus rz_cmd_info_sections_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	RzList *hashes = rz_list_new_from_array((const void **)argv + 1, argc - 1);
+	if (!hashes) {
+		return RZ_CMD_STATUS_ERROR;
+	}
+	rz_core_bin_sections_print(core, state, hashes);
+	rz_list_free(hashes);
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_segments_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	RzList *hashes = rz_list_new_from_array((const void **)argv + 1, argc - 1);
+	if (!hashes) {
+		return RZ_CMD_STATUS_ERROR;
+	}
+	rz_core_bin_segments_print(core, state, hashes);
+	rz_list_free(hashes);
+	return RZ_CMD_STATUS_OK;
+}
+
 RZ_IPI RzCmdStatus rz_cmd_info_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
 	return RZ_CMD_STATUS_ERROR;
 }
