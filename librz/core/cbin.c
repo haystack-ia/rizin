@@ -2912,6 +2912,157 @@ RZ_IPI void rz_core_bin_segments_print(RzCore *core, RzCmdStateOutput *state, Rz
 
 	rz_cmd_state_output_array_end(state);
 }
+
+RZ_IPI void rz_core_bin_strings_print(RzCore *core, RzCmdStateOutput *state) {
+	bool b64str = rz_config_get_i(core->config, "bin.b64str");
+	int va = (core->io->va || core->bin->is_debugger) ? VA_TRUE : VA_FALSE;
+	RzBin *bin = core->bin;
+	RzBinObject *obj = rz_bin_cur_object(bin);
+	const RzList *list = rz_bin_object_get_strings(obj);
+	RzListIter *iter;
+	RzBinString *string;
+	RzBinSection *section;
+
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, "nXXnnsss", "nth", "paddr", "vaddr", "len", "size", "section", "type", "string");
+
+	RzBinString b64 = { 0 };
+	rz_list_foreach (list, iter, string) {
+		const char *section_name, *type_string;
+		ut64 paddr, vaddr;
+		paddr = string->paddr;
+		vaddr = obj ? rva(obj, paddr, string->vaddr, va) : paddr;
+		if (!rz_bin_string_filter(bin, string->string, string->length, vaddr)) {
+			continue;
+		}
+
+		section = obj ? rz_bin_get_section_at(obj, paddr, 0) : NULL;
+		section_name = section ? section->name : "";
+		type_string = rz_bin_string_type(string->type);
+		if (b64str) {
+			ut8 *s = rz_base64_decode_dyn(string->string, -1);
+			if (s && *s && IS_PRINTABLE(*s)) {
+				// TODO: add more checks
+				free(b64.string);
+				memcpy(&b64, string, sizeof(b64));
+				b64.string = (char *)s;
+				b64.size = strlen(b64.string);
+				string = &b64;
+			}
+		}
+
+		switch (state->mode) {
+		case RZ_OUTPUT_MODE_JSON: {
+			int *block_list;
+			pj_o(state->d.pj);
+			pj_kn(state->d.pj, "vaddr", vaddr);
+			pj_kn(state->d.pj, "paddr", paddr);
+			pj_kn(state->d.pj, "ordinal", string->ordinal);
+			pj_kn(state->d.pj, "size", string->size);
+			pj_kn(state->d.pj, "length", string->length);
+			pj_ks(state->d.pj, "section", section_name);
+			pj_ks(state->d.pj, "type", type_string);
+			// data itself may be encoded so use pj_ks
+			pj_ks(state->d.pj, "string", string->string);
+
+			switch (string->type) {
+			case RZ_STRING_TYPE_UTF8:
+			case RZ_STRING_TYPE_WIDE:
+			case RZ_STRING_TYPE_WIDE32:
+				block_list = rz_utf_block_list((const ut8 *)string->string, -1, NULL);
+				if (block_list) {
+					if (block_list[0] == 0 && block_list[1] == -1) {
+						/* Don't include block list if
+						   just Basic Latin (0x00 - 0x7F) */
+						RZ_FREE(block_list);
+						break;
+					}
+					int *block_ptr = block_list;
+					pj_k(state->d.pj, "blocks");
+					pj_a(state->d.pj);
+					for (; *block_ptr != -1; block_ptr++) {
+						const char *utfName = rz_utf_block_name(*block_ptr);
+						pj_s(state->d.pj, utfName ? utfName : "");
+					}
+					pj_end(state->d.pj);
+					RZ_FREE(block_list);
+				}
+			}
+			pj_end(state->d.pj);
+			break;
+		}
+		case RZ_OUTPUT_MODE_TABLE: {
+			int *block_list;
+			char *str = string->string;
+			char *no_dbl_bslash_str = NULL;
+			if (!core->print->esc_bslash) {
+				char *ptr;
+				for (ptr = str; *ptr; ptr++) {
+					if (*ptr != '\\') {
+						continue;
+					}
+					if (*(ptr + 1) == '\\') {
+						if (!no_dbl_bslash_str) {
+							no_dbl_bslash_str = strdup(str);
+							if (!no_dbl_bslash_str) {
+								break;
+							}
+							ptr = no_dbl_bslash_str + (ptr - str);
+						}
+						memmove(ptr + 1, ptr + 2, strlen(ptr + 2) + 1);
+					}
+				}
+				if (no_dbl_bslash_str) {
+					str = no_dbl_bslash_str;
+				}
+			}
+
+			RzStrBuf *buf = rz_strbuf_new(str);
+			switch (string->type) {
+			case RZ_STRING_TYPE_UTF8:
+			case RZ_STRING_TYPE_WIDE:
+			case RZ_STRING_TYPE_WIDE32:
+				block_list = rz_utf_block_list((const ut8 *)string->string, -1, NULL);
+				if (block_list) {
+					if (block_list[0] == 0 && block_list[1] == -1) {
+						/* Don't show block list if
+						   just Basic Latin (0x00 - 0x7F) */
+						break;
+					}
+					int *block_ptr = block_list;
+					rz_strbuf_append(buf, " blocks=");
+					for (; *block_ptr != -1; block_ptr++) {
+						if (block_ptr != block_list) {
+							rz_strbuf_append(buf, ",");
+						}
+						const char *name = rz_utf_block_name(*block_ptr);
+						rz_strbuf_appendf(buf, "%s", name ? name : "");
+					}
+					free(block_list);
+				}
+				break;
+			}
+			char *bufstr = rz_strbuf_drain(buf);
+			rz_table_add_rowf(state->d.t, "nXXddsss", (ut64)string->ordinal, paddr, vaddr,
+				(int)string->length, (int)string->size, section_name,
+				type_string, bufstr);
+			free(bufstr);
+			free(no_dbl_bslash_str);
+			break;
+		}
+		case RZ_OUTPUT_MODE_QUIET:
+			rz_cons_printf("0x%" PFMT64x " %d %d %s\n", vaddr,
+				string->size, string->length, string->string);
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+	}
+	RZ_FREE(b64.string);
+	rz_cmd_state_output_array_end(state);
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure
