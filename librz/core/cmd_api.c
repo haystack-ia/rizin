@@ -347,6 +347,8 @@ out:
  * default one. This function can be used to set it.
  */
 RZ_API void rz_cmd_desc_set_default_mode(RzCmdDesc *cd, RzOutputMode mode) {
+	rz_return_if_fail(cd);
+
 	switch(cd->type) {
 	case RZ_CMD_DESC_TYPE_ARGV_MODES:
 		cd->d.argv_modes_data.default_mode = mode;
@@ -354,6 +356,13 @@ RZ_API void rz_cmd_desc_set_default_mode(RzCmdDesc *cd, RzOutputMode mode) {
 	case RZ_CMD_DESC_TYPE_ARGV_STATE:
 		cd->d.argv_state_data.default_mode = mode;
 		break;
+	case RZ_CMD_DESC_TYPE_GROUP: {
+		RzCmdDesc *exec_cd = rz_cmd_desc_get_exec(cd);
+		if (exec_cd) {
+			rz_cmd_desc_set_default_mode(exec_cd, mode);
+		}
+		break;
+	}
 	default:
 		break;
 	}

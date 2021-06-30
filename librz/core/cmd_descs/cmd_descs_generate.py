@@ -706,6 +706,11 @@ def createcd(cd):
             help_cname_ref="&" + cd.exec_cd.get_help_cname(),
             group_help_cname=cd.get_help_cname(),
         )
+        if cd.exec_cd.default_mode is not None:
+            formatted_string += SET_DEFAULT_MODE_TEMPLATE.format(
+                cname=cd.cname,
+                default_mode=cd.exec_cd.default_mode,
+            )
         formatted_string += "\n".join(
             [createcd(child) for child in cd.subcommands[1:] or []]
         )
@@ -723,6 +728,11 @@ def createcd(cd):
             help_cname_ref="&" + cd.exec_cd.get_help_cname(),
             group_help_cname=cd.get_help_cname(),
         )
+        if cd.exec_cd.default_mode is not None:
+            formatted_string += SET_DEFAULT_MODE_TEMPLATE.format(
+                cname=cd.cname,
+                default_mode=cd.exec_cd.default_mode,
+            )
         formatted_string += "\n".join(
             [createcd(child) for child in cd.subcommands[1:] or []]
         )
