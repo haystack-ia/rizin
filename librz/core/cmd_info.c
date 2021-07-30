@@ -148,7 +148,7 @@ static bool demangle(RzCore *core, const char *s) {
 }
 
 #define STR(x) (x) ? (x) : ""
-static void rz_core_file_info(RzCore *core, PJ *pj, int mode) {
+static void core_file_info(RzCore *core, PJ *pj, int mode) {
 	const char *fn = NULL;
 	bool io_cache = rz_config_get_i(core->config, "io.cache");
 	RzBinInfo *info = rz_bin_get_info(core->bin);
@@ -281,7 +281,7 @@ static void cmd_info_bin(RzCore *core, int va, PJ *pj, int mode) {
 			mode = RZ_MODE_JSON;
 			pj_k(pj, "core");
 		}
-		rz_core_file_info(core, pj, mode);
+		core_file_info(core, pj, mode);
 		if (bin_is_executable(obj)) {
 			if ((mode & RZ_MODE_JSON)) {
 				pj_k(pj, "bin");
@@ -1310,5 +1310,24 @@ RZ_IPI RzCmdStatus rz_cmd_info_strings_handler(RzCore *core, int argc, const cha
 }
 
 RZ_IPI RzCmdStatus rz_cmd_info_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
-	return RZ_CMD_STATUS_ERROR;
+	if (!core->file) {
+		return RZ_CMD_STATUS_ERROR;
+	}
+	if (state->mode == RZ_OUTPUT_MODE_JSON) {
+		pj_o(state->d.pj);
+		pj_k(state->d.pj, "core");
+	}
+	rz_core_file_info_print(core, state);
+
+	RzBinObject *obj = rz_bin_cur_object(core->bin);
+	if (bin_is_executable(obj)) {
+		if (state->mode == RZ_OUTPUT_MODE_JSON) {
+			pj_k(state->d.pj, "bin");
+		}
+		rz_core_bin_info_print(core, state);
+	}
+	if (state->mode == RZ_OUTPUT_MODE_JSON) {
+		pj_end(state->d.pj);
+	}
+	return RZ_CMD_STATUS_OK;
 }
