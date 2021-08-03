@@ -370,8 +370,7 @@ module.exports = grammar({
         2,
         seq(field("command", $._simple_stmt), field("redirect_operator", $._redirect_operator), field("arg", $.arg))
       ),
-    _redirect_operator: ($) =>
-      choice($.fdn_redirect_operator, $.fdn_append_operator),
+    _redirect_operator: ($) => choice($.fdn_redirect_operator, $.fdn_append_operator),
     fdn_redirect_operator: ($) => seq(optional($.file_descriptor), ">"),
     fdn_append_operator: ($) => seq(optional($.file_descriptor), ">>"),
 
