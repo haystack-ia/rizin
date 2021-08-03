@@ -168,8 +168,6 @@ static const char *help_msg_at[] = {
 	"@@@", " [type]", "run a command on every [type] (see @@@? for help)",
 	">", "file", "pipe output of command to file",
 	">>", "file", "append to file",
-	"H>", "file", "pipe output of command to file in HTML",
-	"H>>", "file", "append to file with the output of command in HTML",
 	"`", "pdi~push:0[0]`", "replace output of command inside the line",
 	"|", "cmd", "pipe output to command (pd|less) (.dr*)",
 	NULL
@@ -2007,7 +2005,6 @@ static void annotated_hexdump(RzCore *core, const char *str, int len) {
 	const int col = core->print->col;
 	RzFlagItem *flag, *current_flag = NULL;
 	char **note;
-	int html = rz_config_get_i(core->config, "scr.html");
 	int nb_cons_cols;
 	bool compact = false;
 
@@ -2199,7 +2196,7 @@ static void annotated_hexdump(RzCore *core, const char *str, int len) {
 			if (core->print->cur_enabled) {
 				if (low == max) {
 					if (low == here) {
-						if (html || !usecolor) {
+						if (!usecolor) {
 							append(ebytes, "[");
 							append(echars, "[");
 						} else {
@@ -2209,7 +2206,7 @@ static void annotated_hexdump(RzCore *core, const char *str, int len) {
 					}
 				} else {
 					if (here >= low && here < max) {
-						if (html || !usecolor) {
+						if (!usecolor) {
 							append(ebytes, "[");
 							append(echars, "[");
 						} else {
@@ -2234,7 +2231,7 @@ static void annotated_hexdump(RzCore *core, const char *str, int len) {
 			sprintf(echars, "%c", IS_PRINTABLE(ch) ? ch : '.');
 			echars++;
 			if (core->print->cur_enabled && max == here) {
-				if (!html && usecolor) {
+				if (usecolor) {
 					append(ebytes, Color_RESET);
 					append(echars, Color_RESET);
 				}
@@ -2246,7 +2243,7 @@ static void annotated_hexdump(RzCore *core, const char *str, int len) {
 			}
 
 			if (fend != UT64_MAX && fend == addr + j + 1) {
-				if (!html && usecolor) {
+				if (usecolor) {
 					append(ebytes, Color_RESET);
 					append(echars, Color_RESET);
 				}
@@ -2254,7 +2251,7 @@ static void annotated_hexdump(RzCore *core, const char *str, int len) {
 				hascolor = false;
 			}
 		}
-		if (!html && usecolor) {
+		if (usecolor) {
 			append(ebytes, Color_RESET);
 			append(echars, Color_RESET);
 		}
@@ -2885,7 +2882,6 @@ static void disasm_strings(RzCore *core, const char *input, RzAnalysisFunction *
 	bool show_comments = rz_config_get_i(core->config, "asm.comments");
 	bool show_offset = rz_config_get_i(core->config, "asm.offset");
 	bool asm_tabs = rz_config_get_i(core->config, "asm.tabs");
-	bool scr_html = rz_config_get_i(core->config, "scr.html");
 	bool asm_dwarf = rz_config_get_i(core->config, "asm.dwarf");
 	bool asm_flags = rz_config_get_i(core->config, "asm.flags");
 	bool asm_cmt_right = rz_config_get_i(core->config, "asm.cmt.right");
@@ -2898,7 +2894,6 @@ static void disasm_strings(RzCore *core, const char *input, RzAnalysisFunction *
 	rz_config_set_i(core->config, "asm.dwarf", true);
 	rz_config_set_i(core->config, "scr.color", COLOR_MODE_DISABLED);
 	rz_config_set_i(core->config, "asm.tabs", 0);
-	rz_config_set_i(core->config, "scr.html", 0);
 	rz_config_set_i(core->config, "asm.cmt.right", true);
 
 	line = NULL;
@@ -2924,7 +2919,6 @@ static void disasm_strings(RzCore *core, const char *input, RzAnalysisFunction *
 		line = s = rz_core_cmd_str(core, "pd");
 	}
 
-	rz_config_set_i(core->config, "scr.html", scr_html);
 	rz_config_set_i(core->config, "scr.color", use_color);
 	rz_config_set_i(core->config, "asm.cmt.right", asm_cmt_right);
 	count = rz_str_split(s, '\n');
@@ -3198,7 +3192,6 @@ restore_conf:
 	rz_config_set_i(core->config, "asm.offset", show_offset);
 	rz_config_set_i(core->config, "asm.dwarf", asm_dwarf);
 	rz_config_set_i(core->config, "asm.tabs", asm_tabs);
-	rz_config_set_i(core->config, "scr.html", scr_html);
 	rz_config_set_i(core->config, "asm.emu", asm_emu);
 	rz_config_set_i(core->config, "emu.str", emu_str);
 }
@@ -5755,12 +5748,6 @@ RZ_IPI int rz_cmd_print(void *data, const char *input) {
 			processed_cmd = true;
 			rz_core_cmd_help(core, help_msg_pd);
 			pd_result = 0;
-		}
-		if (formatted_json) {
-			if (rz_cons_singleton()->is_html) {
-				rz_cons_singleton()->is_html = false;
-				rz_cons_singleton()->was_html = true;
-			}
 		}
 		if (!processed_cmd) {
 			ut64 addr = core->offset;
