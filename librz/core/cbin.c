@@ -3029,7 +3029,9 @@ RZ_IPI void rz_core_bin_info_print(RzCore *core, RzCmdStateOutput *state) {
 			pj_ks(pj, "relro", tmp_buf);
 			free(tmp_buf);
 		}
-		pj_ks(pj, "rpath", info->rpath);
+		if (info->rpath) {
+			pj_ks(pj, "rpath", info->rpath);
+		}
 		if (info->rclass && !strcmp(info->rclass, "pe")) {
 			//this should be moved if added to mach0 (or others)
 			pj_kb(pj, "signed", info->signature);

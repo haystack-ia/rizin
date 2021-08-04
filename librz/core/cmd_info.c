@@ -1351,3 +1351,8 @@ RZ_IPI RzCmdStatus rz_cmd_info_headers_handler(RzCore *core, int argc, const cha
 	rz_core_bin_headers_print(core);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_binary_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_info_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
