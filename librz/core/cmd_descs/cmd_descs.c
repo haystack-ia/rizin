@@ -2525,7 +2525,7 @@ static const RzCmdDescArg cmd_info_signature_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_signature_help = {
-	.summary = "Show info of current file",
+	.summary = "Show signature info (entitlements, ...)",
 	.args = cmd_info_signature_args,
 };
 
@@ -5774,9 +5774,8 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	rz_warn_if_fail(cmd_info_classes_cd);
 	rz_cmd_desc_set_default_mode(cmd_info_classes_cd, RZ_OUTPUT_MODE_TABLE);
 
-	RzCmdDesc *cmd_info_signature_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iC", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_signature_help);
+	RzCmdDesc *cmd_info_signature_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iC", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_JSON, rz_cmd_info_signature_handler, &cmd_info_signature_help);
 	rz_warn_if_fail(cmd_info_signature_cd);
-	rz_cmd_desc_set_default_mode(cmd_info_signature_cd, RZ_OUTPUT_MODE_TABLE);
 
 	RzCmdDesc *cmd_info_debug_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "id", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_debug_help);
 	rz_warn_if_fail(cmd_info_debug_cd);

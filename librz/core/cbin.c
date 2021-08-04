@@ -3601,6 +3601,35 @@ RZ_IPI void rz_core_bin_classes_print(RzCore *core, RzCmdStateOutput *state) {
 	return;
 }
 
+RZ_IPI void rz_core_bin_signatures_print(RzCore *core, RzCmdStateOutput *state) {
+	RzBinFile *cur = rz_bin_cur(core->bin);
+	RzBinPlugin *plg = rz_bin_file_cur_plugin(cur);
+	if (!plg || !plg->signature) {
+		return;
+	}
+
+	char *signature = plg->signature(cur, false);
+	if (!signature) {
+		return;
+	}
+
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_JSON:
+		pj_o(state->d.pj);
+		pj_ks(state->d.pj, "signature", signature);
+		pj_end(state->d.pj);
+		break;
+	case RZ_OUTPUT_MODE_STANDARD:
+		rz_cons_println(signature);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+	free(signature);
+	return;
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure

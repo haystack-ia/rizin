@@ -35,15 +35,12 @@ commands:
       - RZ_OUTPUT_MODE_QUIET
     args: []
   - name: iC
-    handler: cmd_info
     cname: cmd_info_signature
-    summary: Show info of current file
+    summary: Show signature info (entitlements, ...)
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
-    default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
-      - RZ_OUTPUT_MODE_TABLE
+      - RZ_OUTPUT_MODE_STANDARD
       - RZ_OUTPUT_MODE_JSON
-      - RZ_OUTPUT_MODE_QUIET
     args: []
   - name: id
     handler: cmd_info

@@ -1336,3 +1336,8 @@ RZ_IPI RzCmdStatus rz_cmd_info_classes_handler(RzCore *core, int argc, const cha
 	rz_core_bin_classes_print(core, state);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_signature_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_signatures_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
