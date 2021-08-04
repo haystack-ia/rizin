@@ -24,14 +24,14 @@ commands:
       - RZ_OUTPUT_MODE_QUIET
     args: []
   - name: ic
-    handler: cmd_info
     cname: cmd_info_classes
-    summary: Show info of current file
+    summary: List classes, methods and fields
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
       - RZ_OUTPUT_MODE_TABLE
       - RZ_OUTPUT_MODE_JSON
+      - RZ_OUTPUT_MODE_LONG
       - RZ_OUTPUT_MODE_QUIET
     args: []
   - name: iC

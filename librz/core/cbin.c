@@ -3190,6 +3190,417 @@ RZ_IPI void rz_core_bin_info_print(RzCore *core, RzCmdStateOutput *state) {
 	return;
 }
 
+static void flags_to_json(PJ *pj, int flags) {
+	int i;
+
+	pj_ka(pj, "flags");
+	for (i = 0; i < 64; i++) {
+		ut64 flag = flags & (1ULL << i);
+		if (flag) {
+			const char *flag_string = rz_bin_get_meth_flag_string(flag, false);
+			if (flag_string) {
+				pj_s(pj, flag_string);
+			} else {
+				pj_s(pj, sdb_fmt("0x%08" PFMT64x, flag));
+			}
+		}
+	}
+	pj_end(pj);
+}
+
+static char *get_rp(const char *rtype) {
+	char *rp = NULL;
+	switch (rtype[0]) {
+	case 'v':
+		rp = strdup("void");
+		break;
+	case 'c':
+		rp = strdup("char");
+		break;
+	case 'i':
+		rp = strdup("int");
+		break;
+	case 's':
+		rp = strdup("short");
+		break;
+	case 'l':
+		rp = strdup("long");
+		break;
+	case 'q':
+		rp = strdup("long long");
+		break;
+	case 'C':
+		rp = strdup("unsigned char");
+		break;
+	case 'I':
+		rp = strdup("unsigned int");
+		break;
+	case 'S':
+		rp = strdup("unsigned short");
+		break;
+	case 'L':
+		rp = strdup("unsigned long");
+		break;
+	case 'Q':
+		rp = strdup("unsigned long long");
+		break;
+	case 'f':
+		rp = strdup("float");
+		break;
+	case 'd':
+		rp = strdup("double");
+		break;
+	case 'D':
+		rp = strdup("long double");
+		break;
+	case 'B':
+		rp = strdup("bool");
+		break;
+	case '#':
+		rp = strdup("CLASS");
+		break;
+	default:
+		rp = strdup("unknown");
+		break;
+	}
+	return rp;
+}
+
+// https://nshipster.com/type-encodings/
+static char *objc_type_toc(const char *objc_type) {
+	if (!objc_type) {
+		return strdup("void*");
+	}
+	if (*objc_type == '^' && objc_type[1] == '{') {
+		char *a = strdup(objc_type + 2);
+		char *b = strchr(a, '>');
+		if (b) {
+			*b = 0;
+		}
+		a[strlen(a) - 1] = 0;
+		return a;
+	}
+	if (*objc_type == '<') {
+		char *a = strdup(objc_type + 1);
+		char *b = strchr(a, '>');
+		if (b) {
+			*b = 0;
+		}
+		return a;
+	}
+	if (!strcmp(objc_type, "f")) {
+		return strdup("float");
+	}
+	if (!strcmp(objc_type, "d")) {
+		return strdup("double");
+	}
+	if (!strcmp(objc_type, "i")) {
+		return strdup("int");
+	}
+	if (!strcmp(objc_type, "s")) {
+		return strdup("short");
+	}
+	if (!strcmp(objc_type, "l")) {
+		return strdup("long");
+	}
+	if (!strcmp(objc_type, "L")) {
+		return strdup("unsigned long");
+	}
+	if (!strcmp(objc_type, "*")) {
+		return strdup("char*");
+	}
+	if (!strcmp(objc_type, "c")) {
+		return strdup("bool");
+	}
+	if (!strcmp(objc_type, "v")) {
+		return strdup("void");
+	}
+	if (!strcmp(objc_type, "#")) {
+		return strdup("class");
+	}
+	if (!strcmp(objc_type, "B")) {
+		return strdup("cxxbool");
+	}
+	if (!strcmp(objc_type, "Q")) {
+		return strdup("uint64_t");
+	}
+	if (!strcmp(objc_type, "q")) {
+		return strdup("long long");
+	}
+	if (!strcmp(objc_type, "C")) {
+		return strdup("uint8_t");
+	}
+	if (strlen(objc_type) == 1) {
+		eprintf("Unknown objc type '%s'\n", objc_type);
+	}
+	if (rz_str_startswith(objc_type, "@\"")) {
+		char *s = rz_str_newf("struct %s", objc_type + 2);
+		s[strlen(s) - 1] = '*';
+		return s;
+	}
+	return strdup(objc_type);
+}
+
+static char *objc_name_toc(const char *objc_name) {
+	const char *n = rz_str_lchr(objc_name, ')');
+	char *s = strdup(n ? n + 1 : objc_name);
+	char *p = strchr(s, '(');
+	if (p) {
+		*p = 0;
+	}
+	return s;
+}
+
+static void classdump_c(RzCore *r, RzBinClass *c) {
+	rz_cons_printf("typedef struct class_%s {\n", c->name);
+	RzListIter *iter2;
+	RzBinField *f;
+	rz_list_foreach (c->fields, iter2, f) {
+		if (f->type && f->name) {
+			char *n = objc_name_toc(f->name);
+			char *t = objc_type_toc(f->type);
+			rz_cons_printf("    %s %s; // %d\n", t, n, f->offset);
+			free(t);
+			free(n);
+		}
+	}
+	rz_cons_printf("} %s;\n", c->name);
+}
+
+static void classdump_objc(RzCore *r, RzBinClass *c) {
+	if (c->super) {
+		rz_cons_printf("@interface %s : %s\n{\n", c->name, c->super);
+	} else {
+		rz_cons_printf("@interface %s\n{\n", c->name);
+	}
+	RzListIter *iter2, *iter3;
+	RzBinField *f;
+	RzBinSymbol *sym;
+	rz_list_foreach (c->fields, iter2, f) {
+		if (f->name && rz_regex_match("ivar", "e", f->name)) {
+			rz_cons_printf("  %s %s\n", f->type, f->name);
+		}
+	}
+	rz_cons_printf("}\n");
+	rz_list_foreach (c->methods, iter3, sym) {
+		if (sym->rtype && sym->rtype[0] != '@') {
+			char *rp = get_rp(sym->rtype);
+			rz_cons_printf("%s (%s) %s\n",
+				strncmp(sym->type, RZ_BIN_TYPE_METH_STR, 4) ? "+" : "-",
+				rp, sym->dname ? sym->dname : sym->name);
+			free(rp);
+		} else if (sym->type) {
+			rz_cons_printf("%s (id) %s\n",
+				strncmp(sym->type, RZ_BIN_TYPE_METH_STR, 4) ? "+" : "-",
+				sym->dname ? sym->dname : sym->name);
+		}
+	}
+	rz_cons_printf("@end\n");
+}
+
+static inline char *demangle_class(const char *classname) {
+	if (!classname || classname[0] != 'L') {
+		return strdup(classname ? classname : "?");
+	}
+	char *demangled = strdup(classname + 1);
+	if (!demangled) {
+		return strdup(classname);
+	}
+	rz_str_replace_ch(demangled, '/', '.', 1);
+	demangled[strlen(demangled) - 1] = 0;
+	return demangled;
+}
+
+static inline char *demangle_type(const char *any) {
+	if (!any) {
+		return strdup("unknown");
+	}
+	switch (any[0]) {
+	case 'L': return rz_bin_demangle_java(any);
+	case 'B': return strdup("byte");
+	case 'C': return strdup("char");
+	case 'D': return strdup("double");
+	case 'F': return strdup("float");
+	case 'I': return strdup("int");
+	case 'J': return strdup("long");
+	case 'S': return strdup("short");
+	case 'V': return strdup("void");
+	case 'Z': return strdup("boolean");
+	default: return strdup("unknown");
+	}
+}
+
+static inline const char *resolve_visibility(const char *v) {
+	return v ? v : "public";
+}
+
+static void classdump_java(RzCore *r, RzBinClass *c) {
+	RzBinField *f;
+	RzListIter *iter2, *iter3;
+	RzBinSymbol *sym;
+	bool simplify = false;
+	char *package = NULL, *classname = NULL;
+	char *tmp = (char *)rz_str_rchr(c->name, NULL, '/');
+	if (tmp) {
+		package = demangle_class(c->name);
+		classname = strdup(tmp + 1);
+		classname[strlen(classname) - 1] = 0;
+		simplify = true;
+	} else {
+		package = strdup("defpackage");
+		classname = demangle_class(c->name);
+	}
+
+	rz_cons_printf("package %s;\n\n", package);
+
+	const char *visibility = resolve_visibility(c->visibility_str);
+	rz_cons_printf("%s class %s {\n", visibility, classname);
+	rz_list_foreach (c->fields, iter2, f) {
+		visibility = resolve_visibility(f->visibility_str);
+		char *ftype = demangle_type(f->type);
+		if (simplify) {
+			// hide the current package in the demangled value.
+			ftype = rz_str_replace(ftype, package, classname, 1);
+		}
+		rz_cons_printf("  %s %s %s;\n", visibility, ftype, f->name);
+		free(ftype);
+	}
+	if (!rz_list_empty(c->fields)) {
+		rz_cons_newline();
+	}
+
+	rz_list_foreach (c->methods, iter3, sym) {
+		const char *mn = sym->dname ? sym->dname : sym->name;
+		visibility = resolve_visibility(sym->visibility_str);
+		char *dem = rz_bin_demangle_java(mn);
+		if (simplify) {
+			// hide the current package in the demangled value.
+			dem = rz_str_replace(dem, package, classname, 1);
+		}
+		// rename all <init> to class name
+		dem = rz_str_replace(dem, "<init>", classname, 1);
+		rz_cons_printf("  %s %s;\n", visibility, dem);
+		free(dem);
+	}
+	free(package);
+	free(classname);
+	rz_cons_printf("}\n\n");
+}
+
+static inline bool is_java_lang(RzBinFile *bf) {
+	if (!bf || !bf->o) {
+		return false;
+	} else if (bf->o->lang == RZ_BIN_NM_JAVA) {
+		return true;
+	} else if (!bf->o->info || !bf->o->info->lang) {
+		return false;
+	}
+	const char *lang = bf->o->info->lang;
+	return strstr(lang, "dalvik") || strstr(lang, "java") || strstr(lang, "kotlin");
+}
+
+RZ_IPI void rz_core_bin_classes_print(RzCore *core, RzCmdStateOutput *state) {
+	RzListIter *iter, *iter2, *iter3;
+	RzBinSymbol *sym;
+	RzBinClass *c;
+	RzBinField *f;
+
+	RzBinObject *o = rz_bin_cur_object(core->bin);
+	if (!o) {
+		return;
+	}
+	const RzList *cs = rz_bin_object_get_classes(o);
+	if (!cs) {
+		return;
+	}
+
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, "XXXss", "address", "min", "max", "name", "super", NULL);
+
+	rz_list_foreach (cs, iter, c) {
+		ut64 at_min = UT64_MAX;
+		ut64 at_max = 0LL;
+
+		rz_list_foreach (c->methods, iter2, sym) {
+			if (sym->vaddr) {
+				if (sym->vaddr < at_min) {
+					at_min = sym->vaddr;
+				}
+				if (sym->vaddr + sym->size > at_max) {
+					at_max = sym->vaddr + sym->size;
+				}
+			}
+		}
+		if (at_min == UT64_MAX) {
+			at_min = c->addr;
+			at_max = c->addr; // XXX + size?
+		}
+
+		switch (state->mode) {
+		case RZ_OUTPUT_MODE_QUIET:
+			rz_cons_printf("0x%08" PFMT64x " [0x%08" PFMT64x " - 0x%08" PFMT64x "] %s%s%s\n",
+				c->addr, at_min, at_max, c->name, c->super ? " " : "",
+				c->super ? c->super : "");
+			break;
+		case RZ_OUTPUT_MODE_JSON:
+			pj_o(state->d.pj);
+			pj_ks(state->d.pj, "classname", c->name);
+			pj_kN(state->d.pj, "addr", c->addr);
+			pj_ki(state->d.pj, "index", c->index);
+			if (c->super) {
+				pj_ks(state->d.pj, "visibility", c->visibility_str ? c->visibility_str : "");
+				pj_ks(state->d.pj, "super", c->super);
+			}
+			pj_ka(state->d.pj, "methods");
+			rz_list_foreach (c->methods, iter2, sym) {
+				pj_o(state->d.pj);
+				pj_ks(state->d.pj, "name", sym->name);
+				if (sym->method_flags) {
+					flags_to_json(state->d.pj, sym->method_flags);
+				}
+				pj_kN(state->d.pj, "addr", sym->vaddr);
+				pj_end(state->d.pj);
+			}
+			pj_end(state->d.pj);
+			pj_ka(state->d.pj, "fields");
+			rz_list_foreach (c->fields, iter3, f) {
+				pj_o(state->d.pj);
+				pj_ks(state->d.pj, "name", f->name);
+				if (f->flags) {
+					flags_to_json(state->d.pj, f->flags);
+				}
+				pj_kN(state->d.pj, "addr", f->vaddr);
+				pj_end(state->d.pj);
+			}
+			pj_end(state->d.pj);
+			pj_end(state->d.pj);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			rz_table_add_rowf(state->d.t, "XXXss", c->addr, at_min, at_max, c->name, c->super);
+			break;
+		case RZ_OUTPUT_MODE_LONG:
+			switch (o->lang) {
+			case RZ_BIN_NM_JAVA:
+				classdump_java(core, c);
+				break;
+			case RZ_BIN_NM_OBJC:
+				classdump_objc(core, c);
+				break;
+			case RZ_BIN_NM_C:
+			default:
+				classdump_c(core, c);
+				break;
+			}
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+	}
+	rz_cmd_state_output_array_end(state);
+	return;
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure
@@ -4168,64 +4579,6 @@ static int bin_fields(RzCore *r, PJ *pj, int mode, int va) {
 	return true;
 }
 
-static char *get_rp(const char *rtype) {
-	char *rp = NULL;
-	switch (rtype[0]) {
-	case 'v':
-		rp = strdup("void");
-		break;
-	case 'c':
-		rp = strdup("char");
-		break;
-	case 'i':
-		rp = strdup("int");
-		break;
-	case 's':
-		rp = strdup("short");
-		break;
-	case 'l':
-		rp = strdup("long");
-		break;
-	case 'q':
-		rp = strdup("long long");
-		break;
-	case 'C':
-		rp = strdup("unsigned char");
-		break;
-	case 'I':
-		rp = strdup("unsigned int");
-		break;
-	case 'S':
-		rp = strdup("unsigned short");
-		break;
-	case 'L':
-		rp = strdup("unsigned long");
-		break;
-	case 'Q':
-		rp = strdup("unsigned long long");
-		break;
-	case 'f':
-		rp = strdup("float");
-		break;
-	case 'd':
-		rp = strdup("double");
-		break;
-	case 'D':
-		rp = strdup("long double");
-		break;
-	case 'B':
-		rp = strdup("bool");
-		break;
-	case '#':
-		rp = strdup("CLASS");
-		break;
-	default:
-		rp = strdup("unknown");
-		break;
-	}
-	return rp;
-}
-
 static int bin_trycatch(RzCore *core, PJ *pj, int mode) {
 	RzBinFile *bf = rz_bin_cur(core->bin);
 	RzListIter *iter;
@@ -4240,239 +4593,6 @@ static int bin_trycatch(RzCore *core, PJ *pj, int mode) {
 		idx++;
 	}
 	return true;
-}
-
-// https://nshipster.com/type-encodings/
-static char *objc_type_toc(const char *objc_type) {
-	if (!objc_type) {
-		return strdup("void*");
-	}
-	if (*objc_type == '^' && objc_type[1] == '{') {
-		char *a = strdup(objc_type + 2);
-		char *b = strchr(a, '>');
-		if (b) {
-			*b = 0;
-		}
-		a[strlen(a) - 1] = 0;
-		return a;
-	}
-	if (*objc_type == '<') {
-		char *a = strdup(objc_type + 1);
-		char *b = strchr(a, '>');
-		if (b) {
-			*b = 0;
-		}
-		return a;
-	}
-	if (!strcmp(objc_type, "f")) {
-		return strdup("float");
-	}
-	if (!strcmp(objc_type, "d")) {
-		return strdup("double");
-	}
-	if (!strcmp(objc_type, "i")) {
-		return strdup("int");
-	}
-	if (!strcmp(objc_type, "s")) {
-		return strdup("short");
-	}
-	if (!strcmp(objc_type, "l")) {
-		return strdup("long");
-	}
-	if (!strcmp(objc_type, "L")) {
-		return strdup("unsigned long");
-	}
-	if (!strcmp(objc_type, "*")) {
-		return strdup("char*");
-	}
-	if (!strcmp(objc_type, "c")) {
-		return strdup("bool");
-	}
-	if (!strcmp(objc_type, "v")) {
-		return strdup("void");
-	}
-	if (!strcmp(objc_type, "#")) {
-		return strdup("class");
-	}
-	if (!strcmp(objc_type, "B")) {
-		return strdup("cxxbool");
-	}
-	if (!strcmp(objc_type, "Q")) {
-		return strdup("uint64_t");
-	}
-	if (!strcmp(objc_type, "q")) {
-		return strdup("long long");
-	}
-	if (!strcmp(objc_type, "C")) {
-		return strdup("uint8_t");
-	}
-	if (strlen(objc_type) == 1) {
-		eprintf("Unknown objc type '%s'\n", objc_type);
-	}
-	if (rz_str_startswith(objc_type, "@\"")) {
-		char *s = rz_str_newf("struct %s", objc_type + 2);
-		s[strlen(s) - 1] = '*';
-		return s;
-	}
-	return strdup(objc_type);
-}
-
-static char *objc_name_toc(const char *objc_name) {
-	const char *n = rz_str_lchr(objc_name, ')');
-	char *s = strdup(n ? n + 1 : objc_name);
-	char *p = strchr(s, '(');
-	if (p) {
-		*p = 0;
-	}
-	return s;
-}
-
-static void classdump_c(RzCore *r, RzBinClass *c) {
-	rz_cons_printf("typedef struct class_%s {\n", c->name);
-	RzListIter *iter2;
-	RzBinField *f;
-	rz_list_foreach (c->fields, iter2, f) {
-		if (f->type && f->name) {
-			char *n = objc_name_toc(f->name);
-			char *t = objc_type_toc(f->type);
-			rz_cons_printf("    %s %s; // %d\n", t, n, f->offset);
-			free(t);
-			free(n);
-		}
-	}
-	rz_cons_printf("} %s;\n", c->name);
-}
-
-static void classdump_objc(RzCore *r, RzBinClass *c) {
-	if (c->super) {
-		rz_cons_printf("@interface %s : %s\n{\n", c->name, c->super);
-	} else {
-		rz_cons_printf("@interface %s\n{\n", c->name);
-	}
-	RzListIter *iter2, *iter3;
-	RzBinField *f;
-	RzBinSymbol *sym;
-	rz_list_foreach (c->fields, iter2, f) {
-		if (f->name && rz_regex_match("ivar", "e", f->name)) {
-			rz_cons_printf("  %s %s\n", f->type, f->name);
-		}
-	}
-	rz_cons_printf("}\n");
-	rz_list_foreach (c->methods, iter3, sym) {
-		if (sym->rtype && sym->rtype[0] != '@') {
-			char *rp = get_rp(sym->rtype);
-			rz_cons_printf("%s (%s) %s\n",
-				strncmp(sym->type, RZ_BIN_TYPE_METH_STR, 4) ? "+" : "-",
-				rp, sym->dname ? sym->dname : sym->name);
-			free(rp);
-		} else if (sym->type) {
-			rz_cons_printf("%s (id) %s\n",
-				strncmp(sym->type, RZ_BIN_TYPE_METH_STR, 4) ? "+" : "-",
-				sym->dname ? sym->dname : sym->name);
-		}
-	}
-	rz_cons_printf("@end\n");
-}
-
-static inline char *demangle_class(const char *classname) {
-	if (!classname || classname[0] != 'L') {
-		return strdup(classname ? classname : "?");
-	}
-	char *demangled = strdup(classname + 1);
-	if (!demangled) {
-		return strdup(classname);
-	}
-	rz_str_replace_ch(demangled, '/', '.', 1);
-	demangled[strlen(demangled) - 1] = 0;
-	return demangled;
-}
-
-static inline char *demangle_type(const char *any) {
-	if (!any) {
-		return strdup("unknown");
-	}
-	switch (any[0]) {
-	case 'L': return rz_bin_demangle_java(any);
-	case 'B': return strdup("byte");
-	case 'C': return strdup("char");
-	case 'D': return strdup("double");
-	case 'F': return strdup("float");
-	case 'I': return strdup("int");
-	case 'J': return strdup("long");
-	case 'S': return strdup("short");
-	case 'V': return strdup("void");
-	case 'Z': return strdup("boolean");
-	default: return strdup("unknown");
-	}
-}
-
-static inline const char *resolve_visibility(const char *v) {
-	return v ? v : "public";
-}
-
-static void classdump_java(RzCore *r, RzBinClass *c) {
-	RzBinField *f;
-	RzListIter *iter2, *iter3;
-	RzBinSymbol *sym;
-	bool simplify = false;
-	char *package = NULL, *classname = NULL;
-	char *tmp = (char *)rz_str_rchr(c->name, NULL, '/');
-	if (tmp) {
-		package = demangle_class(c->name);
-		classname = strdup(tmp + 1);
-		classname[strlen(classname) - 1] = 0;
-		simplify = true;
-	} else {
-		package = strdup("defpackage");
-		classname = demangle_class(c->name);
-	}
-
-	rz_cons_printf("package %s;\n\n", package);
-
-	const char *visibility = resolve_visibility(c->visibility_str);
-	rz_cons_printf("%s class %s {\n", visibility, classname);
-	rz_list_foreach (c->fields, iter2, f) {
-		visibility = resolve_visibility(f->visibility_str);
-		char *ftype = demangle_type(f->type);
-		if (simplify) {
-			// hide the current package in the demangled value.
-			ftype = rz_str_replace(ftype, package, classname, 1);
-		}
-		rz_cons_printf("  %s %s %s;\n", visibility, ftype, f->name);
-		free(ftype);
-	}
-	if (!rz_list_empty(c->fields)) {
-		rz_cons_newline();
-	}
-
-	rz_list_foreach (c->methods, iter3, sym) {
-		const char *mn = sym->dname ? sym->dname : sym->name;
-		visibility = resolve_visibility(sym->visibility_str);
-		char *dem = rz_bin_demangle_java(mn);
-		if (simplify) {
-			// hide the current package in the demangled value.
-			dem = rz_str_replace(dem, package, classname, 1);
-		}
-		// rename all <init> to class name
-		dem = rz_str_replace(dem, "<init>", classname, 1);
-		rz_cons_printf("  %s %s;\n", visibility, dem);
-		free(dem);
-	}
-	free(package);
-	free(classname);
-	rz_cons_printf("}\n\n");
-}
-
-static inline bool is_java_lang(RzBinFile *bf) {
-	if (!bf || !bf->o) {
-		return false;
-	} else if (bf->o->lang == RZ_BIN_NM_JAVA) {
-		return true;
-	} else if (!bf->o->info || !bf->o->info->lang) {
-		return false;
-	}
-	const char *lang = bf->o->info->lang;
-	return strstr(lang, "dalvik") || strstr(lang, "java") || strstr(lang, "kotlin");
 }
 
 static int bin_classes(RzCore *r, PJ *pj, int mode) {

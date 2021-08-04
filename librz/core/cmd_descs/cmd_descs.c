@@ -2517,7 +2517,7 @@ static const RzCmdDescArg cmd_info_classes_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_classes_help = {
-	.summary = "Show info of current file",
+	.summary = "List classes, methods and fields",
 	.args = cmd_info_classes_args,
 };
 
@@ -5770,7 +5770,7 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	rz_warn_if_fail(cmd_info_archs_cd);
 	rz_cmd_desc_set_default_mode(cmd_info_archs_cd, RZ_OUTPUT_MODE_TABLE);
 
-	RzCmdDesc *cmd_info_classes_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "ic", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_classes_help);
+	RzCmdDesc *cmd_info_classes_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "ic", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_LONG | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_classes_handler, &cmd_info_classes_help);
 	rz_warn_if_fail(cmd_info_classes_cd);
 	rz_cmd_desc_set_default_mode(cmd_info_classes_cd, RZ_OUTPUT_MODE_TABLE);
 
