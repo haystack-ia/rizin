@@ -1341,3 +1341,13 @@ RZ_IPI RzCmdStatus rz_cmd_info_signature_handler(RzCore *core, int argc, const c
 	rz_core_bin_signatures_print(core, state);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_fields_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_fields_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_headers_handler(RzCore *core, int argc, const char **argv) {
+	rz_core_bin_headers_print(core);
+	return RZ_CMD_STATUS_OK;
+}

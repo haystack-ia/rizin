@@ -3630,6 +3630,68 @@ RZ_IPI void rz_core_bin_signatures_print(RzCore *core, RzCmdStateOutput *state) 
 	return;
 }
 
+RZ_IPI void rz_core_bin_fields_print(RzCore *core, RzCmdStateOutput *state) {
+	RzBinObject *o = rz_bin_cur_object(core->bin);
+	if (!o) {
+		return;
+	}
+
+	const RzList *fields = rz_bin_object_get_fields(o);
+	RzListIter *iter;
+	RzBinField *field;
+	bool haveComment;
+
+	rz_cmd_state_output_set_columnsf(state, "XsXs", "paddr", "name", "vaddr", "comment");
+	rz_cmd_state_output_array_start(state);
+	rz_list_foreach (fields, iter, field) {
+		switch (state->mode) {
+		case RZ_OUTPUT_MODE_JSON:
+			pj_o(state->d.pj);
+			pj_ks(state->d.pj, "name", field->name);
+			pj_kN(state->d.pj, "vaddr", field->vaddr);
+			pj_kN(state->d.pj, "paddr", field->paddr);
+			if (field->comment && *field->comment) {
+				pj_ks(state->d.pj, "comment", field->comment);
+			}
+			if (field->format && *field->format) {
+				pj_ks(state->d.pj, "format", field->format);
+			}
+			char *o = rz_core_cmd_strf(core, "pfj%c%s@0x%" PFMT64x,
+				field->format_named ? '.' : ' ', field->format, field->vaddr);
+			if (o && *o) {
+				rz_str_trim_tail(o);
+				pj_k(state->d.pj, "pf");
+				pj_j(state->d.pj, o);
+			}
+			free(o);
+			pj_end(state->d.pj);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			rz_table_add_rowf(state->d.t, "XsXs", field->paddr, field->name, field->vaddr, field->comment);
+			break;
+		case RZ_OUTPUT_MODE_QUIET:
+			haveComment = RZ_STR_ISNOTEMPTY(field->comment);
+			rz_cons_printf("0x%08" PFMT64x " 0x%08" PFMT64x " %s%s%s\n",
+				field->vaddr, field->paddr, field->name,
+				haveComment ? "; " : "",
+				haveComment ? field->comment : "");
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+	}
+	rz_cmd_state_output_array_end(state);
+}
+
+RZ_IPI void rz_core_bin_headers_print(RzCore *core) {
+	RzBinFile *cur = rz_bin_cur(core->bin);
+	RzBinPlugin *plg = rz_bin_file_cur_plugin(cur);
+	if (plg && plg->header) {
+		plg->header(cur);
+	}
+}
+
 /**
  * \brief fetch relocs for the object and print them
  * \return the number of relocs or -1 on failure

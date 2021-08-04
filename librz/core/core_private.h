@@ -114,6 +114,8 @@ RZ_IPI void rz_core_file_info_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_bin_info_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_bin_classes_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_bin_signatures_print(RzCore *core, RzCmdStateOutput *state);
+RZ_IPI void rz_core_bin_fields_print(RzCore *core, RzCmdStateOutput *state);
+RZ_IPI void rz_core_bin_headers_print(RzCore *core);
 
 /* cdebug.c */
 RZ_IPI bool rz_core_debug_reg_set(RzCore *core, const char *regname, ut64 val, const char *strval);
