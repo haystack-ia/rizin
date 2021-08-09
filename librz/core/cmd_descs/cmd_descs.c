@@ -2550,7 +2550,7 @@ static const RzCmdDescArg cmd_info_entry_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_entry_help = {
-	.summary = "Show info of current file",
+	.summary = "List entrypoints",
 	.args = cmd_info_entry_args,
 };
 
@@ -2558,7 +2558,7 @@ static const RzCmdDescArg cmd_info_entryexits_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_entryexits_help = {
-	.summary = "Show info of current file",
+	.summary = "List entries/exits functions (e.g. preinit, init, fini)",
 	.args = cmd_info_entryexits_args,
 };
 
@@ -2566,7 +2566,7 @@ static const RzCmdDescArg cmd_info_exports_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_exports_help = {
-	.summary = "Show info of current file",
+	.summary = "List exports (global symbols)",
 	.args = cmd_info_exports_args,
 };
 
@@ -2590,7 +2590,7 @@ static const RzCmdDescArg cmd_info_imports_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_imports_help = {
-	.summary = "Show info of current file",
+	.summary = "List imports",
 	.args = cmd_info_imports_args,
 };
 
@@ -2614,7 +2614,7 @@ static const RzCmdDescArg cmd_info_libs_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_libs_help = {
-	.summary = "Show info of current file",
+	.summary = "List libraries",
 	.args = cmd_info_libs_args,
 };
 
@@ -2645,7 +2645,7 @@ static const RzCmdDescArg cmd_info_main_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_main_help = {
-	.summary = "Show info of current file",
+	.summary = "Show main address",
 	.args = cmd_info_main_args,
 };
 
@@ -2653,7 +2653,7 @@ static const RzCmdDescArg cmd_info_relocs_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_relocs_help = {
-	.summary = "Show info of current file",
+	.summary = "List relocations",
 	.args = cmd_info_relocs_args,
 };
 
@@ -2669,7 +2669,7 @@ static const RzCmdDescArg cmd_info_symbols_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_symbols_help = {
-	.summary = "Show info of current file",
+	.summary = "List symbols",
 	.args = cmd_info_symbols_args,
 };
 
@@ -2692,7 +2692,7 @@ static const RzCmdDescArg cmd_info_sections_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_sections_help = {
-	.summary = "Show info of current file",
+	.summary = "List sections",
 	.args = cmd_info_sections_args,
 };
 
@@ -2723,7 +2723,7 @@ static const RzCmdDescArg cmd_info_segments_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_segments_help = {
-	.summary = "Show info of current file",
+	.summary = "List segments",
 	.args = cmd_info_segments_args,
 };
 
@@ -2763,7 +2763,7 @@ static const RzCmdDescArg cmd_info_strings_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_strings_help = {
-	.summary = "Show info of current file",
+	.summary = "List strings",
 	.args = cmd_info_strings_args,
 };
 

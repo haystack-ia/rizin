@@ -66,7 +66,7 @@ commands:
     args: []
   - name: ie
     cname: cmd_info_entry
-    summary: Show info of current file
+    summary: List entrypoints
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -76,7 +76,7 @@ commands:
     args: []
   - name: iee
     cname: cmd_info_entryexits
-    summary: Show info of current file
+    summary: List entries/exits functions (e.g. preinit, init, fini)
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -86,7 +86,7 @@ commands:
     args: []
   - name: iE
     cname: cmd_info_exports
-    summary: Show info of current file
+    summary: List exports (global symbols)
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -110,7 +110,7 @@ commands:
     args: []
   - name: ii
     cname: cmd_info_imports
-    summary: Show info of current file
+    summary: List imports
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -141,7 +141,7 @@ commands:
     args: []
   - name: il
     cname: cmd_info_libs
-    summary: Show info of current file
+    summary: List libraries
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -175,7 +175,7 @@ commands:
     args: []
   - name: iM
     cname: cmd_info_main
-    summary: Show info of current file
+    summary: Show main address
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -185,7 +185,7 @@ commands:
     args: []
   - name: ir
     cname: cmd_info_relocs
-    summary: Show info of current file
+    summary: List relocations
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -206,7 +206,7 @@ commands:
     args: []
   - name: is
     cname: cmd_info_symbols
-    summary: Show info of current file
+    summary: List symbols
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -227,7 +227,7 @@ commands:
     args: []
   - name: iS
     cname: cmd_info_sections
-    summary: Show info of current file
+    summary: List sections
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -262,7 +262,7 @@ commands:
     args: []
   - name: iSS
     cname: cmd_info_segments
-    summary: Show info of current file
+    summary: List segments
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
@@ -319,7 +319,7 @@ commands:
     args: []
   - name: iz
     cname: cmd_info_strings
-    summary: Show info of current file
+    summary: List strings
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
