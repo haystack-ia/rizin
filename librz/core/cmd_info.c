@@ -1356,3 +1356,31 @@ RZ_IPI RzCmdStatus rz_cmd_info_binary_handler(RzCore *core, int argc, const char
 	rz_core_bin_info_print(core, state);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_plugins_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	if (argc < 2) {
+		rz_core_bin_plugins_print(core->bin, state);
+		return RZ_CMD_STATUS_OK;
+	}
+
+	const char *plugin_name = argv[1];
+	const RzBinPlugin *bp = rz_bin_plugin_get(core->bin, plugin_name);
+	if (bp) {
+		rz_core_bin_plugin_print(bp, state);
+		return RZ_CMD_STATUS_OK;
+	}
+
+	const RzBinXtrPlugin *xbp = rz_bin_xtrplugin_get(core->bin, plugin_name);
+	if (xbp) {
+		rz_core_binxtr_plugin_print(xbp, state);
+		return RZ_CMD_STATUS_OK;
+	}
+
+	const RzBinLdrPlugin *lbp = rz_bin_ldrplugin_get(core->bin, plugin_name);
+	if (lbp) {
+		rz_core_binldr_plugin_print(lbp, state);
+		return RZ_CMD_STATUS_OK;
+	}
+
+	return RZ_CMD_STATUS_ERROR;
+}

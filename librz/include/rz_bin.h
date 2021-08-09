@@ -859,6 +859,9 @@ RZ_API bool rz_bin_ldr_add(RzBin *bin, RzBinLdrPlugin *foo);
 RZ_API bool rz_bin_list_plugin(RzBin *bin, const char *name, PJ *pj, int json);
 RZ_API RzBinPlugin *rz_bin_get_binplugin_by_bytes(RzBin *bin, const ut8 *bytes, ut64 sz);
 RZ_API RzBinPlugin *rz_bin_get_binplugin_by_buffer(RzBin *bin, RzBuffer *buf);
+RZ_API const RzBinPlugin *rz_bin_plugin_get(RzBin *bin, const char *name);
+RZ_API const RzBinXtrPlugin *rz_bin_xtrplugin_get(RzBin *bin, const char *name);
+RZ_API const RzBinLdrPlugin *rz_bin_ldrplugin_get(RzBin *bin, const char *name);
 RZ_API void rz_bin_force_plugin(RzBin *bin, const char *pname);
 
 // get/set various bin information

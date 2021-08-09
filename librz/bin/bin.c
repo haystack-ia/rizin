@@ -1242,3 +1242,45 @@ RZ_API RzBinTrycatch *rz_bin_trycatch_new(ut64 source, ut64 from, ut64 to, ut64 
 RZ_API void rz_bin_trycatch_free(RzBinTrycatch *tc) {
 	free(tc);
 }
+
+RZ_API const RzBinPlugin *rz_bin_plugin_get(RzBin *bin, const char *name) {
+	rz_return_val_if_fail(bin && name, NULL);
+
+	RzListIter *iter;
+	RzBinPlugin *bp;
+
+	rz_list_foreach (bin->plugins, iter, bp) {
+		if (!strcmp (bp->name, name)) {
+			return bp;
+		}
+	}
+	return NULL;
+}
+
+RZ_API const RzBinXtrPlugin *rz_bin_xtrplugin_get(RzBin *bin, const char *name) {
+	rz_return_val_if_fail(bin && name, NULL);
+
+	RzListIter *iter;
+	RzBinXtrPlugin *bp;
+
+	rz_list_foreach (bin->binxtrs, iter, bp) {
+		if (!strcmp (bp->name, name)) {
+			return bp;
+		}
+	}
+	return NULL;
+}
+
+RZ_API const RzBinLdrPlugin *rz_bin_ldrplugin_get(RzBin *bin, const char *name) {
+	rz_return_val_if_fail(bin && name, NULL);
+
+	RzListIter *iter;
+	RzBinLdrPlugin *bp;
+
+	rz_list_foreach (bin->binldrs, iter, bp) {
+		if (!strcmp (bp->name, name)) {
+			return bp;
+		}
+	}
+	return NULL;
+}

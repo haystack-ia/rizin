@@ -150,16 +150,18 @@ commands:
       - RZ_OUTPUT_MODE_QUIET
     args: []
   - name: iL
-    handler: cmd_info
     cname: cmd_info_plugins
-    summary: Show info of current file
+    summary: List all binary plugins loaded / Show plugin details
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
-    default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
+      - RZ_OUTPUT_MODE_STANDARD
       - RZ_OUTPUT_MODE_TABLE
       - RZ_OUTPUT_MODE_JSON
       - RZ_OUTPUT_MODE_QUIET
-    args: []
+    args:
+      - name: plugin
+        type: RZ_CMD_ARG_TYPE_STRING
+        optional: true
   - name: im
     handler: cmd_info
     cname: cmd_info_memory
