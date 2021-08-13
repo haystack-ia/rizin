@@ -30,6 +30,7 @@ return strdup(
 	"gpr     x10     .64     88      0\n"
 	"gpr     x11     .64     96      0\n"
 	"gpr     x12     .64     104     0\n"
+	"gpr     ip      .32     104     0\n"
 	"gpr     x13     .64     112     0\n"
 	"gpr     x14     .64     120     0\n"
 	"gpr     x15     .64     128     0\n"
