@@ -3038,6 +3038,7 @@ static void anop64(ArmCSContext *ctx, RzAnalysisOp *op, cs_insn *insn) {
 		break;
 	case ARM64_INS_BLR: // blr x0
 		op->type = RZ_ANALYSIS_OP_TYPE_RCALL;
+		op->reg = cs_reg_name(handle, INSOP64(0).reg);
 		op->fail = addr + 4;
 		//op->jump = IMM64(0);
 		break;
@@ -3054,7 +3055,8 @@ static void anop64(ArmCSContext *ctx, RzAnalysisOp *op, cs_insn *insn) {
 		op->fail = addr + op->size;
 		break;
 	case ARM64_INS_BR:
-		op->type = RZ_ANALYSIS_OP_TYPE_UJMP; // RJMP ?
+		op->type = RZ_ANALYSIS_OP_TYPE_RJMP;
+		op->reg = cs_reg_name(handle, INSOP64(0).reg);
 		op->eob = true;
 		break;
 	case ARM64_INS_B:
