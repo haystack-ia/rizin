@@ -38,18 +38,18 @@ typedef enum {
 } DATA_EFF_OPERATION;
 
 struct effect_label_t {
-	string label_id; ///< Label name
-	BitVector addr; ///< BitVector address if EFFECT_LABEL_ADDR
+	char *label_id; ///< Label name
+	RzILBitVector addr; ///< RzILBitVector address if EFFECT_LABEL_ADDR
 		///< Function pointer if EFFECT_LABEL_SYSCALL / EFFECT_LABEL_HOOK
 	EFFECT_LABEL_TYPE type; ///< type of label
 };
 
 struct control_effect_t {
-	BitVector pc; ///< New Program Counter
+	RzILBitVector pc; ///< New Program Counter
 };
 
 struct data_effect_t {
-	string var_name; ///< Name of variable
+	const char *var_name; ///< Name of variable, const one
 	int val_index; ///< index to the new value
 	DATA_EFF_OPERATION operation; ///< operation to value and variable
 };
@@ -73,14 +73,14 @@ struct effect_union_t {
 	};
 };
 
-// a chain off effects
+// a chain of effects
 // should use something like rz_vector / rz_list
 Effect effect_new(EFFECT_TYPE type);
 DataEffect effect_new_data(void);
 CtrlEffect effect_new_ctrl(void);
 Effect wrap_ctrl_effect(CtrlEffect eff);
 Effect wrap_data_effect(DataEffect eff);
-EffectLabel effect_new_label(string name, EFFECT_LABEL_TYPE type);
+EffectLabel effect_new_label(char *name, EFFECT_LABEL_TYPE type);
 void effect_free(Effect effect);
 void effect_free_ctrl(CtrlEffect eff);
 void effect_free_data(DataEffect eff);

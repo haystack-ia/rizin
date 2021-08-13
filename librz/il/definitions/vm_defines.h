@@ -25,8 +25,8 @@ typedef enum {
 } RZIL_VAR_TYPE;
 
 typedef union {
-	BitVector bv;
-	Bool b;
+	RzILBitVector bv;
+	RzILBool b;
 } RzValUnion;
 
 /**
@@ -34,7 +34,7 @@ typedef union {
  *  \brief structure of RzILVar
  */
 struct rz_il_var_t {
-	string var_name; ///< name of variable
+	char *var_name; ///< name of variable
 	RZIL_VAR_TYPE type; ///< data type of variable
 };
 
@@ -82,7 +82,7 @@ typedef enum {
  *  \struct rz_il_tempv_t
  *  \brief structure for RzIL Temporary
  *
- *  It's a container to carry BitVector/RzILVal/Bool/Effect temporarily
+ *  It's a container to carry RzILBitVector/RzILVal/RzILBool/Effect temporarily
  */
 struct rz_il_tempv_t {
 	void *data; ///< Pointer to the carried data
@@ -90,7 +90,7 @@ struct rz_il_tempv_t {
 };
 typedef struct rz_il_tempv_t *RzILTemp;
 
-RZ_API RzILVar rz_il_new_variable(string name);
+RZ_API RzILVar rz_il_new_variable(char *name);
 RZ_API RzILVal rz_il_new_value(void);
 RZ_API RzILTemp rz_il_new_temp(void);
 RZ_API RzILVal rz_il_dump_value(RzILVal val);

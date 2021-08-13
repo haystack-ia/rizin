@@ -2,22 +2,27 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #ifndef RZIL_CORE_THEORY_DEFINITIONS_H
+#define RZIL_CORE_THEORY_DEFINITIONS_H
+
 #include "_ct_opcodes.h"
 
+// TODO : a better way to map enum to string
+// Remember to add new opcode in rz_il_op2str
+// if you add a new one.
 typedef enum {
 	// Init
 	RZIL_OP_VAR,
 	RZIL_OP_UNK,
 	RZIL_OP_ITE,
 
-	// Bool
+	// RzILBool
 	RZIL_OP_B0,
 	RZIL_OP_B1,
 	RZIL_OP_INV,
 	RZIL_OP_AND_,
 	RZIL_OP_OR_,
 
-	// BitVector
+	// RzILBitVector
 	RZIL_OP_INT,
 	RZIL_OP_MSB,
 	RZIL_OP_LSB,
@@ -56,8 +61,9 @@ typedef enum {
 	RZIL_OP_REPEAT,
 	RZIL_OP_BRANCH,
 
-	RZIL_OP_INVALID
-} CoreTheoryOPCode;
+	RZIL_OP_INVALID,
+	RZIL_OP_MAX,
+} RzILOPCode;
 
 /// support core theory opcode
 /// define every CoreTheory opcode struct */
@@ -157,13 +163,12 @@ typedef union {
 
 struct RzILOp_t {
 	ut64 id;
-	CoreTheoryOPCode code;
+	RzILOPCode code;
 	_RzILOp op;
 };
 typedef struct RzILOp_t *RzILOp;
 // Opcode
-RZ_API RzILOp rz_il_new_op(CoreTheoryOPCode code);
+RZ_API RzILOp rz_il_new_op(RzILOPCode code);
 RZ_API void rz_il_free_op(RzILOp op);
 
-#define RZIL_CORE_THEORY_DEFINITIONS_H
 #endif //RZIL_CORE_THEORY_DEFINITIONS_H

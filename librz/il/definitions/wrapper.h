@@ -10,10 +10,10 @@
 #include "vm_defines.h"
 #include "mem.h"
 
-BitVector val_cast_to_bitv(RzILVal val);
-Bool val_cast_to_bool(RzILVal val);
+RzILBitVector val_cast_to_bitv(RzILVal val);
+RzILBool val_cast_to_bool(RzILVal val);
 
-RzILVal bitv_cast_to_val(BitVector bv);
-RzILVal bool_cast_to_val(Bool b);
+RzILVal bitv_cast_to_val(RzILBitVector bv);
+RzILVal bool_cast_to_val(RzILBool b);
 
 #endif //CORE_THEORY_VM_WRAPPER_H

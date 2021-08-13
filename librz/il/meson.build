@@ -12,7 +12,7 @@ rz_il_sources = [
    'core_theory_mem.c',
    'core_theory_opcodes.c',
    'core_theory_vm.c',
-   'internal_ct_cmd.c',
+   'vm_layer.c',
 ]
 
 rz_il_inc = [

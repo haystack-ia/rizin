@@ -156,7 +156,7 @@ void print_effect(Effect effect) {
 	printf("\n");
 }
 
-EffectLabel effect_new_label(string name, EFFECT_LABEL_TYPE type) {
+EffectLabel effect_new_label(char *name, EFFECT_LABEL_TYPE type) {
 	EffectLabel lbl = (EffectLabel)RZ_NEW0(struct effect_label_t);
 	lbl->label_id = strdup(name);
 	lbl->type = type;

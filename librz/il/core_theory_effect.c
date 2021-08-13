@@ -29,7 +29,7 @@ void rz_il_perform_ctrl(RzILVM vm, Effect eff) {
 	}
 
 	// Normal
-	BitVector new_addr = rz_il_bv_dump(eff->ctrl_eff->pc);
+	RzILBitVector new_addr = rz_il_bv_dump(eff->ctrl_eff->pc);
 	rz_il_bv_free(vm->pc);
 	vm->pc = new_addr;
 }
@@ -66,7 +66,7 @@ void rz_il_handler_set(RzILVM vm, RzILOp op) {
 
 void rz_il_handler_jmp(RzILVM vm, RzILOp op) {
 	RzILOpJmp op_jmp = op->op.jmp;
-	BitVector addr = rz_il_get_bv_temp(vm, op_jmp->dst);
+	RzILBitVector addr = rz_il_get_bv_temp(vm, op_jmp->dst);
 	Effect eff = effect_new(EFFECT_TYPE_CTRL);
 
 	eff->ctrl_eff->pc = rz_il_bv_dump(addr);
@@ -76,7 +76,7 @@ void rz_il_handler_jmp(RzILVM vm, RzILOp op) {
 
 void rz_il_handler_goto(RzILVM vm, RzILOp op) {
 	RzILOpGoto op_goto = op->op.goto_;
-	string lname = op_goto->lbl;
+	const char *lname = op_goto->lbl;
 	Effect eff = effect_new(EFFECT_TYPE_CTRL);
 
 	EffectLabel label = rz_il_vm_find_label_by_name(vm, lname);
@@ -127,7 +127,7 @@ void rz_il_handler_repeat(RzILVM vm, RzILOp op) {
 void rz_il_handler_branch(RzILVM vm, RzILOp op) {
 	RzILOpBranch op_branch = op->op.branch;
 
-	Bool condition = rz_il_get_bool_temp(vm, op_branch->condition);
+	RzILBool condition = rz_il_get_bool_temp(vm, op_branch->condition);
 	Effect true_branch, false_branch;
 
 	if (condition->b) {

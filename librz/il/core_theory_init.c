@@ -7,7 +7,7 @@
 void rz_il_handler_ite(RzILVM vm, RzILOp op) {
 	RzILOpIte op_ite = op->op.ite;
 
-	Bool condition = rz_il_get_bool_temp(vm, op_ite->condition);
+	RzILBool condition = rz_il_get_bool_temp(vm, op_ite->condition);
 	RzILVal true_branch = rz_il_get_val_temp(vm, op_ite->x);
 	RzILVal false_branch = rz_il_get_val_temp(vm, op_ite->y);
 

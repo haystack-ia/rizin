@@ -23,7 +23,7 @@ static bool is_flag_reg(RzAnalysis *analysis, const char *reg_name) {
 	return false;
 }
 
-static char *opcode_to_str(CoreTheoryOPCode opcode) {
+static char *opcode_to_str(RzILOPCode opcode) {
 	return "OP_NOP";
 }
 
@@ -74,7 +74,7 @@ static void stats_parse_and_add_flgs() {
 	// call add flg here
 }
 
-static void stats_add_op(RzAnalysisRzil *rzil, CoreTheoryOPCode opcode) {
+static void stats_add_op(RzAnalysisRzil *rzil, RzILOPCode opcode) {
 	const char *op_name = opcode_to_str(opcode);
 	sdb_array_add(rzil->stats, "ops.list", op_name, 0);
 }

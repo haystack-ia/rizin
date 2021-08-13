@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 /**
- * @file _ct_opcodes.h
- * @brief signatures of core theory opcodes
+ * \file _ct_opcodes.h
+ * \brief signatures of core theory opcodes
  *
  * Modular Hierarchy of the whole core theory
  * (we implement the Minimal part only)
@@ -18,7 +18,7 @@
  *           +-------+--------+--------+-------+
  *           |       |        |        |       |
  *           o       o        o        o       o
- *         Init    Bool     Bitv    Memory   Effect
+ *         Init    RzILBool     Bitv    Memory   Effect
  *
  * See also the references :
  * 0. A gentle introduction to core theory http://binaryanalysisplatform.github.io/bap/api/odoc/bap-core-theory/Bap_core_theory/index.html
@@ -40,7 +40,7 @@
 struct rzil_op_int_t {
 	int length; ///< s -- sort(type), length of bitvector
 	int value; ///< x -- value of bitvector
-	RzIL_BITV int ret; ///< index of BitVector in temp_value_list
+	RzIL_BITV int ret; ///< index of RzILBitVector in temp_value_list
 };
 
 /**
@@ -51,7 +51,7 @@ struct rzil_op_int_t {
  */
 struct rzil_op_msb_lsb_t {
 	RzIL_BITV int bv; ///< index of bitvector operand
-	RzIL_BOOL int ret; ///< index of return Bool value in temp_value_list
+	RzIL_BOOL int ret; ///< index of return RzILBool value in temp_value_list
 };
 
 /**
@@ -62,7 +62,7 @@ struct rzil_op_msb_lsb_t {
  */
 struct rzil_op_neg_t {
 	RzIL_BITV int bv; ///< index of bitvector operand
-	RzIL_BITV int ret; ///< index of return BitVector value in temp_value_list
+	RzIL_BITV int ret; ///< index of return RzILBitVector value in temp_value_list
 };
 
 /**
@@ -73,7 +73,7 @@ struct rzil_op_neg_t {
  */
 struct rzil_op_not_t {
 	RzIL_BITV int bv; ///< index of bitvector operand
-	RzIL_BITV int ret; ///< index of return BitVector value in temp_value_list
+	RzIL_BITV int ret; ///< index of return RzILBitVector value in temp_value_list
 };
 
 /**
@@ -143,7 +143,7 @@ struct rzil_op_perform_t {
  *  set v x changes the value stored in v to the value of x.
  */
 struct rzil_op_set_t {
-	RzIL_VAR string v; ///< name of variable
+	RzIL_VAR const char *v; ///< name of variable, const one
 	RzIL_PURE_VAL int x; ///< index of RzILVal
 	RzIL_EFF int ret; ///< index of store Effect result
 };
@@ -155,7 +155,7 @@ struct rzil_op_set_t {
  *  jmp dst passes the control to a program located at dst.
  */
 struct rzil_op_jmp_t {
-	RzIL_BITV int dst; ///< index of destination address (BitVector)
+	RzIL_BITV int dst; ///< index of destination address (RzILBitVector)
 	RzIL_EFF int ret_ctrl_eff; ///< index of store control effect
 };
 
@@ -166,7 +166,7 @@ struct rzil_op_jmp_t {
  *  goto lbl passes the control to a program labeled with lbl.
  */
 struct rzil_op_goto_t {
-	RzIL_LABLE string lbl; ///< name of the label
+	RzIL_LABLE const char *lbl; ///< name of the label, const one
 	RzIL_EFF int ret_ctrl_eff; ///< index of store control effect
 };
 
@@ -239,7 +239,7 @@ struct rzil_op_ite_t {
  *  var v is the value of the variable v.
  */
 struct rzil_op_var_t {
-	RzIL_VAR string v; ///< name of variable
+	RzIL_VAR const char *v; ///< name of variable, const one
 	RzIL_PURE_VAL int ret; ///< index of RzILVal value of the variable
 };
 
@@ -307,7 +307,7 @@ struct rzil_op_inv_t {
  */
 struct rzil_op_load_t {
 	RzIL_MEM int mem; ///< index of the memory in VM (different from the temp_val_list)
-	RzIL_BITV int key; ///< index of the BitVector key (address)
+	RzIL_BITV int key; ///< index of the RzILBitVector key (address)
 	RzIL_BITV int ret; ///< index of store the data loaded from memory
 };
 
@@ -319,9 +319,9 @@ struct rzil_op_load_t {
  */
 struct rzil_op_store_t {
 	RzIL_MEM int mem; ///< index of memory in VM
-	RzIL_BITV int key; ///< index of the BitVector key (address)
+	RzIL_BITV int key; ///< index of the RzILBitVector key (address)
 	RzIL_BITV int value; ///< index of the RzILVal value (data) to store
 	RzIL_MEM int ret; ///< The returned Mem index.
 };
 
-#endif //BUILD__CT_OPCODES_H
+#endif // BUILD__CT_OPCODES_H

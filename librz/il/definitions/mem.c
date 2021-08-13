@@ -35,7 +35,7 @@ void rz_il_free_mem(Mem mem) {
 	free(mem);
 }
 
-Mem rz_il_mem_store(Mem mem, BitVector key, BitVector value) {
+Mem rz_il_mem_store(Mem mem, RzILBitVector key, RzILBitVector value) {
 	if (value->len != mem->min_unit_size) {
 		printf("[Type Not Matched]\n");
 		return NULL;
@@ -44,8 +44,8 @@ Mem rz_il_mem_store(Mem mem, BitVector key, BitVector value) {
 	return mem;
 }
 
-BitVector rz_il_mem_load(Mem mem, BitVector key) {
-	BitVector val = ht_pp_find(mem->kv_map, key, NULL);
-	BitVector ret = rz_il_bv_dump(val);
+RzILBitVector rz_il_mem_load(Mem mem, RzILBitVector key) {
+	RzILBitVector val = ht_pp_find(mem->kv_map, key, NULL);
+	RzILBitVector ret = rz_il_bv_dump(val);
 	return ret;
 }

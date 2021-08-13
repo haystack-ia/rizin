@@ -84,7 +84,7 @@ static inline void rzil_add_reg_trace(RzAnalysisRzilTrace *rtrace, RzILTraceRegO
 }
 
 // buf limit 32
-static void bv_to_databuf(ut8 *buf, BitVector bv) {
+static void bv_to_databuf(ut8 *buf, RzILBitVector bv) {
 	// rz_il_bv_prepend_zero(bv, 128 - bv->len);
 	//	if (bv->_elem_len != 16) {
 	//		RZ_LOG_ERROR("BAD SIZE\n");
@@ -95,8 +95,8 @@ static void bv_to_databuf(ut8 *buf, BitVector bv) {
 static void rz_analysis_rzil_trace_focus_mem_read(RzAnalysis *analysis, RzAnalysisRzil *rzil, RzILOp single_op) {
 	RzILOpLoad op_load = single_op->op.load;
 
-	BitVector addr = rz_il_get_bv_temp(rzil->vm, op_load->key);
-	BitVector data = rz_il_get_bv_temp(rzil->vm, op_load->ret);
+	RzILBitVector addr = rz_il_get_bv_temp(rzil->vm, op_load->key);
+	RzILBitVector data = rz_il_get_bv_temp(rzil->vm, op_load->ret);
 
 	if (data->len > 128) {
 		RZ_LOG_ERROR("RZIL memory read more than 128 bits\n");
@@ -118,8 +118,8 @@ static void rz_analysis_rzil_trace_focus_mem_read(RzAnalysis *analysis, RzAnalys
 static void rz_analysis_rzil_trace_focus_mem_write(RzAnalysis *analysis, RzAnalysisRzil *rzil, RzILOp single_op) {
 	RzILOpStore op_store = single_op->op.store;
 
-	BitVector addr = rz_il_get_bv_temp(rzil->vm, op_store->key);
-	BitVector data = rz_il_get_bv_temp(rzil->vm, op_store->value);
+	RzILBitVector addr = rz_il_get_bv_temp(rzil->vm, op_store->key);
+	RzILBitVector data = rz_il_get_bv_temp(rzil->vm, op_store->value);
 
 	if (data->len > 128) {
 		RZ_LOG_ERROR("RZIL memory write more than 128 bits\n");

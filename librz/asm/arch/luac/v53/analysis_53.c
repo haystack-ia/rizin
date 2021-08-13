@@ -37,7 +37,7 @@ int lua53_anal_op(RzAnalysis *anal, RzAnalysisOp *op, ut64 addr, const ut8 *data
 			op->size = 8;
 		}
 		break;
-	case OP_LOADBOOL: /*  A B C   R(A) := (Bool)B; if (C) pc++                    */
+	case OP_LOADBOOL: /*  A B C   R(A) := (RzILBool)B; if (C) pc++                    */
 		op->type = RZ_ANALYSIS_OP_TYPE_CJMP;
 		op->val = !!GETARG_B(instruction);
 		op->jump = op->addr + 8;

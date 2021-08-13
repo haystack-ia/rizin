@@ -10,7 +10,7 @@
  * \param name string, name of variable
  * \return var RzILVar, pointer to this variable
  */
-RZ_API RzILVar rz_il_new_variable(string name) {
+RZ_API RzILVar rz_il_new_variable(char *name) {
 	RzILVar ret;
 
 	ret = (RzILVar)malloc(sizeof(struct rz_il_var_t));

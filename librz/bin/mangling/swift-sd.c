@@ -21,7 +21,7 @@ struct Type {
 
 static struct Type types[] = {
 	/* basic types */
-	{ "Sb", "Bool" },
+	{ "Sb", "RzILBool" },
 	{ "SS", "String" },
 	{ "FS", "String" },
 	{ "GV", "mutableAddressor" }, // C_ARGC
@@ -32,7 +32,7 @@ static struct Type types[] = {
 	{ "Sa", "Array" },
 	{ "Si", "Swift.Int" },
 	{ "Sf", "Float" },
-	{ "Sb", "Bool" },
+	{ "Sb", "RzILBool" },
 	{ "Su", "UInt" },
 	{ "SQ", "ImplicitlyUnwrappedOptional" },
 	{ "Sc", "UnicodeScalar" },
