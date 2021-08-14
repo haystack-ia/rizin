@@ -89,16 +89,21 @@ commands:
               - RZ_OUTPUT_MODE_JSON
             args: []
   - name: iD
-    handler: cmd_info
     cname: cmd_info_demangle
-    summary: Show info of current file
-    type: RZ_CMD_DESC_TYPE_ARGV_STATE
-    default_mode: RZ_OUTPUT_MODE_TABLE
-    modes:
-      - RZ_OUTPUT_MODE_TABLE
-      - RZ_OUTPUT_MODE_JSON
-      - RZ_OUTPUT_MODE_QUIET
-    args: []
+    summary: Demangle symbol for given language
+    args:
+      - name: lang
+        type: RZ_CMD_ARG_TYPE_CHOICES
+        choices:
+          - c++
+          - java
+          - objc
+          - swift
+          - dlang
+          - msvc
+          - rust
+      - name: symbol
+        type: RZ_CMD_ARG_TYPE_STRING
   - name: ie
     cname: cmd_info_entry
     summary: List entrypoints

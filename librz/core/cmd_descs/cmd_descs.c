@@ -131,6 +131,7 @@ static const RzCmdDescArg env_args[3];
 static const RzCmdDescArg history_list_or_exec_args[2];
 static const RzCmdDescArg cmd_info_pdb_load_args[2];
 static const RzCmdDescArg cmd_info_pdb_show_args[2];
+static const RzCmdDescArg cmd_info_demangle_args[3];
 static const RzCmdDescArg cmd_info_plugins_args[2];
 static const RzCmdDescArg cmd_info_sections_args[2];
 static const RzCmdDescArg cmd_info_segments_args[2];
@@ -2582,11 +2583,24 @@ static const RzCmdDescHelp cmd_info_pdb_download_help = {
 	.args = cmd_info_pdb_download_args,
 };
 
+static const char *cmd_info_demangle_lang_choices[] = { "c++", "java", "objc", "swift", "dlang", "msvc", "rust", NULL };
 static const RzCmdDescArg cmd_info_demangle_args[] = {
+	{
+		.name = "lang",
+		.type = RZ_CMD_ARG_TYPE_CHOICES,
+		.choices = cmd_info_demangle_lang_choices,
+
+	},
+	{
+		.name = "symbol",
+		.type = RZ_CMD_ARG_TYPE_STRING,
+		.flags = RZ_CMD_ARG_FLAG_LAST,
+
+	},
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_demangle_help = {
-	.summary = "Show info of current file",
+	.summary = "Demangle symbol for given language",
 	.args = cmd_info_demangle_args,
 };
 
@@ -5839,9 +5853,8 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	RzCmdDesc *cmd_info_pdb_download_cd = rz_cmd_desc_argv_state_new(core->rcmd, idp_cd, "idpd", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_JSON, rz_cmd_info_pdb_download_handler, &cmd_info_pdb_download_help);
 	rz_warn_if_fail(cmd_info_pdb_download_cd);
 
-	RzCmdDesc *cmd_info_demangle_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iD", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_demangle_help);
+	RzCmdDesc *cmd_info_demangle_cd = rz_cmd_desc_argv_new(core->rcmd, i_cd, "iD", rz_cmd_info_demangle_handler, &cmd_info_demangle_help);
 	rz_warn_if_fail(cmd_info_demangle_cd);
-	rz_cmd_desc_set_default_mode(cmd_info_demangle_cd, RZ_OUTPUT_MODE_TABLE);
 
 	RzCmdDesc *cmd_info_entry_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "ie", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_entry_handler, &cmd_info_entry_help);
 	rz_warn_if_fail(cmd_info_entry_cd);

@@ -1455,3 +1455,8 @@ RZ_IPI RzCmdStatus rz_cmd_info_pdb_download_handler(RzCore *core, int argc, cons
 	}
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_demangle_handler(RzCore *core, int argc, const char **argv) {
+	demangle_internal(core, argv[1], argv[2]);
+	return RZ_CMD_STATUS_OK;
+}
