@@ -43,16 +43,51 @@ commands:
       - RZ_OUTPUT_MODE_JSON
     args: []
   - name: id
-    handler: cmd_info
-    cname: cmd_info_debug
-    summary: Show info of current file
-    type: RZ_CMD_DESC_TYPE_ARGV_STATE
-    default_mode: RZ_OUTPUT_MODE_TABLE
-    modes:
-      - RZ_OUTPUT_MODE_TABLE
-      - RZ_OUTPUT_MODE_JSON
-      - RZ_OUTPUT_MODE_QUIET
-    args: []
+    summary: Debug commands
+    subcommands:
+      - name: id
+        summary: Show DWARF source lines information
+        cname: cmd_info_dwarf
+        type: RZ_CMD_DESC_TYPE_ARGV_STATE
+        modes:
+          - RZ_OUTPUT_MODE_STANDARD
+          - RZ_OUTPUT_MODE_QUIET
+          - RZ_OUTPUT_MODE_JSON
+        args: []
+      - name: idp
+        summary: PDB commands
+        subcommands:
+          - name: idp
+            summary: Load PDB file information
+            cname: cmd_info_pdb_load
+            type: RZ_CMD_DESC_TYPE_ARGV_STATE
+            modes:
+              - RZ_OUTPUT_MODE_STANDARD
+              - RZ_OUTPUT_MODE_JSON
+            args:
+              - name: file.pdb
+                type: RZ_CMD_ARG_TYPE_FILE
+                optional: true
+          - name: idpi
+            summary: Show PDB file information
+            cname: cmd_info_pdb_show
+            type: RZ_CMD_DESC_TYPE_ARGV_STATE
+            modes:
+              - RZ_OUTPUT_MODE_STANDARD
+              - RZ_OUTPUT_MODE_RIZIN
+              - RZ_OUTPUT_MODE_JSON
+            args:
+              - name: file.pdb
+                type: RZ_CMD_ARG_TYPE_FILE
+                optional: true
+          - name: idpd
+            summary: Download PDB file on remote server
+            cname: cmd_info_pdb_download
+            type: RZ_CMD_DESC_TYPE_ARGV_STATE
+            modes:
+              - RZ_OUTPUT_MODE_STANDARD
+              - RZ_OUTPUT_MODE_JSON
+            args: []
   - name: iD
     handler: cmd_info
     cname: cmd_info_demangle

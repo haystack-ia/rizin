@@ -183,7 +183,10 @@ RZ_IPI RzCmdStatus rz_cmd_info_handler(RzCore *core, int argc, const char **argv
 RZ_IPI RzCmdStatus rz_cmd_info_archs_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
 RZ_IPI RzCmdStatus rz_cmd_info_classes_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
 RZ_IPI RzCmdStatus rz_cmd_info_signature_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
-RZ_IPI RzCmdStatus rz_cmd_info_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
+RZ_IPI RzCmdStatus rz_cmd_info_dwarf_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
+RZ_IPI RzCmdStatus rz_cmd_info_pdb_load_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
+RZ_IPI RzCmdStatus rz_cmd_info_pdb_show_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
+RZ_IPI RzCmdStatus rz_cmd_info_pdb_download_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
 RZ_IPI RzCmdStatus rz_cmd_info_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
 RZ_IPI RzCmdStatus rz_cmd_info_entry_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);
 RZ_IPI RzCmdStatus rz_cmd_info_entryexits_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state);

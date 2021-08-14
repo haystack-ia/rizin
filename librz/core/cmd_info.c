@@ -1384,3 +1384,74 @@ RZ_IPI RzCmdStatus rz_cmd_info_plugins_handler(RzCore *core, int argc, const cha
 
 	return RZ_CMD_STATUS_ERROR;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_dwarf_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_dwarf_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_pdb_load_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	char *filename = argc > 1 ? strdup(argv[1]) : rz_core_bin_pdb_get_filename(core);
+	if (!filename || !rz_file_exists(filename)) {
+		eprintf("PDB file cannot be downloaded\n");
+		free(filename);
+		return RZ_CMD_STATUS_ERROR;
+	}
+
+	rz_cons_push();
+	rz_core_pdb_info(core, filename, NULL, RZ_MODE_RIZINCMD);
+	free(filename);
+	const char *buf = rz_cons_get_buffer();
+	if (!buf) {
+		rz_cons_pop();
+		return RZ_CMD_STATUS_ERROR;
+	}
+	char *s = strdup(buf);
+	rz_cons_pop();
+	if (!s) {
+		return RZ_CMD_STATUS_ERROR;
+	}
+
+	RzCmdStatus status = rz_core_cmd_rzshell(core, s, 0);
+	free(s);
+	return status;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_pdb_show_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	char *filename = argc > 1 ? strdup(argv[1]) : rz_core_bin_pdb_get_filename(core);
+	if (!filename || !rz_file_exists(filename)) {
+		eprintf("PDB file cannot be downloaded\n");
+		free(filename);
+		return RZ_CMD_STATUS_ERROR;
+	}
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_STANDARD:
+		rz_core_pdb_info(core, filename, NULL, RZ_MODE_PRINT);
+		break;
+	case RZ_OUTPUT_MODE_JSON:
+		rz_core_pdb_info(core, filename, state->d.pj, RZ_MODE_JSON);
+		break;
+	case RZ_OUTPUT_MODE_RIZIN:
+		rz_core_pdb_info(core, filename, NULL, RZ_MODE_RIZINCMD);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+	free(filename);
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_pdb_download_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	SPDBOptions pdbopts;
+	pdbopts.user_agent = rz_config_get(core->config, "pdb.useragent");
+	pdbopts.extract = rz_config_get_i(core->config, "pdb.extract");
+	pdbopts.symbol_store_path = rz_config_get(core->config, "pdb.symstore");
+	pdbopts.symbol_server = rz_config_get(core->config, "pdb.server");
+	int r = rz_bin_pdb_download(core, state->mode == RZ_OUTPUT_MODE_JSON ? state->d.pj : NULL, state->mode == RZ_OUTPUT_MODE_JSON, &pdbopts);
+	if (r > 0) {
+		eprintf("Error while downloading pdb file\n");
+		return RZ_CMD_STATUS_ERROR;
+	}
+	return RZ_CMD_STATUS_OK;
+}

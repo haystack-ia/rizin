@@ -129,6 +129,8 @@ static const RzCmdDescArg eval_spaces_args[2];
 static const RzCmdDescArg eval_type_args[2];
 static const RzCmdDescArg env_args[3];
 static const RzCmdDescArg history_list_or_exec_args[2];
+static const RzCmdDescArg cmd_info_pdb_load_args[2];
+static const RzCmdDescArg cmd_info_pdb_show_args[2];
 static const RzCmdDescArg cmd_info_plugins_args[2];
 static const RzCmdDescArg cmd_info_sections_args[2];
 static const RzCmdDescArg cmd_info_segments_args[2];
@@ -2530,12 +2532,54 @@ static const RzCmdDescHelp cmd_info_signature_help = {
 	.args = cmd_info_signature_args,
 };
 
-static const RzCmdDescArg cmd_info_debug_args[] = {
+static const RzCmdDescHelp id_help = {
+	.summary = "Debug commands",
+};
+static const RzCmdDescArg cmd_info_dwarf_args[] = {
 	{ 0 },
 };
-static const RzCmdDescHelp cmd_info_debug_help = {
-	.summary = "Show info of current file",
-	.args = cmd_info_debug_args,
+static const RzCmdDescHelp cmd_info_dwarf_help = {
+	.summary = "Show DWARF source lines information",
+	.args = cmd_info_dwarf_args,
+};
+
+static const RzCmdDescHelp idp_help = {
+	.summary = "PDB commands",
+};
+static const RzCmdDescArg cmd_info_pdb_load_args[] = {
+	{
+		.name = "file.pdb",
+		.type = RZ_CMD_ARG_TYPE_FILE,
+		.optional = true,
+
+	},
+	{ 0 },
+};
+static const RzCmdDescHelp cmd_info_pdb_load_help = {
+	.summary = "Load PDB file information",
+	.args = cmd_info_pdb_load_args,
+};
+
+static const RzCmdDescArg cmd_info_pdb_show_args[] = {
+	{
+		.name = "file.pdb",
+		.type = RZ_CMD_ARG_TYPE_FILE,
+		.optional = true,
+
+	},
+	{ 0 },
+};
+static const RzCmdDescHelp cmd_info_pdb_show_help = {
+	.summary = "Show PDB file information",
+	.args = cmd_info_pdb_show_args,
+};
+
+static const RzCmdDescArg cmd_info_pdb_download_args[] = {
+	{ 0 },
+};
+static const RzCmdDescHelp cmd_info_pdb_download_help = {
+	.summary = "Download PDB file on remote server",
+	.args = cmd_info_pdb_download_args,
 };
 
 static const RzCmdDescArg cmd_info_demangle_args[] = {
@@ -5785,9 +5829,15 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	RzCmdDesc *cmd_info_signature_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iC", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_JSON, rz_cmd_info_signature_handler, &cmd_info_signature_help);
 	rz_warn_if_fail(cmd_info_signature_cd);
 
-	RzCmdDesc *cmd_info_debug_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "id", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_debug_help);
-	rz_warn_if_fail(cmd_info_debug_cd);
-	rz_cmd_desc_set_default_mode(cmd_info_debug_cd, RZ_OUTPUT_MODE_TABLE);
+	RzCmdDesc *id_cd = rz_cmd_desc_group_state_new(core->rcmd, i_cd, "id", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_QUIET | RZ_OUTPUT_MODE_JSON, rz_cmd_info_dwarf_handler, &cmd_info_dwarf_help, &id_help);
+	rz_warn_if_fail(id_cd);
+	RzCmdDesc *idp_cd = rz_cmd_desc_group_state_new(core->rcmd, id_cd, "idp", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_JSON, rz_cmd_info_pdb_load_handler, &cmd_info_pdb_load_help, &idp_help);
+	rz_warn_if_fail(idp_cd);
+	RzCmdDesc *cmd_info_pdb_show_cd = rz_cmd_desc_argv_state_new(core->rcmd, idp_cd, "idpi", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_RIZIN | RZ_OUTPUT_MODE_JSON, rz_cmd_info_pdb_show_handler, &cmd_info_pdb_show_help);
+	rz_warn_if_fail(cmd_info_pdb_show_cd);
+
+	RzCmdDesc *cmd_info_pdb_download_cd = rz_cmd_desc_argv_state_new(core->rcmd, idp_cd, "idpd", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_JSON, rz_cmd_info_pdb_download_handler, &cmd_info_pdb_download_help);
+	rz_warn_if_fail(cmd_info_pdb_download_cd);
 
 	RzCmdDesc *cmd_info_demangle_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iD", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_demangle_help);
 	rz_warn_if_fail(cmd_info_demangle_cd);

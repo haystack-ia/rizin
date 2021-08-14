@@ -6041,6 +6041,62 @@ RZ_API RzCmdStatus rz_core_bin_plugins_print(RzBin *bin, RzCmdStateOutput *state
 	return RZ_CMD_STATUS_OK;
 }
 
+RZ_IPI void rz_core_bin_dwarf_print(RzCore *core, RzCmdStateOutput *state) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	if (!bf) {
+		return;
+	}
+
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_STANDARD:
+		bin_dwarf(core, bf, NULL, RZ_MODE_PRINT);
+		break;
+	case RZ_OUTPUT_MODE_QUIET:
+		bin_dwarf(core, bf, NULL, RZ_MODE_SIMPLE);
+		break;
+	case RZ_OUTPUT_MODE_JSON:
+		bin_dwarf(core, bf, state->d.pj, RZ_MODE_JSON);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+}
+
+RZ_IPI char *rz_core_bin_pdb_get_filename(RzCore *core) {
+	RzBinInfo *info = rz_bin_get_info(core->bin);
+	/* Autodetect local file */
+	if (!info || !info->debug_file_name) {
+		return NULL;
+	}
+	// Check raw path for debug filename
+	bool file_found = rz_file_exists(rz_file_basename(info->debug_file_name));
+	if (file_found) {
+		return strdup(rz_file_basename(info->debug_file_name));
+	}
+	// Check debug filename basename in current directory
+	char *basename = (char *)rz_file_basename(info->debug_file_name);
+	file_found = rz_file_exists(basename);
+	if (file_found) {
+		return strdup(basename);
+	}
+	// Check if debug file is in file directory
+	char *dir = rz_file_dirname(core->bin->cur->file);
+	char *filename = rz_str_newf("%s/%s", dir, basename);
+	free(dir);
+	file_found = rz_file_exists(filename);
+	if (file_found) {
+		return filename;
+	}
+	free(filename);
+
+	// Last chance: Check if file is in downstream symbol store
+	const char *symstore_path = rz_config_get(core->config, "pdb.symstore");
+	const char *base_file = rz_file_basename(info->debug_file_name);
+	return rz_str_newf("%s" RZ_SYS_DIR "%s" RZ_SYS_DIR "%s" RZ_SYS_DIR "%s",
+		symstore_path, base_file, info->guid, base_file);
+}
+
 static void print_arch(RzBin *bin, RzCmdStateOutput *state, int num, ut64 offset, ut64 size,
 	const char *arch, int bits, const char *machine, const char *flag, RzBinInfo *info) {
 
