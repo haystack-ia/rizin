@@ -120,6 +120,7 @@ RZ_IPI void rz_core_bin_dwarf_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI char *rz_core_bin_pdb_get_filename(RzCore *core);
 RZ_IPI void rz_core_bin_memory_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_bin_resources_print(RzCore *core, RzCmdStateOutput *state);
+RZ_IPI void rz_core_bin_versions_print(RzCore *core, RzCmdStateOutput *state);
 
 RZ_IPI RzCmdStatus rz_core_bin_plugin_print(const RzBinPlugin *bp, RzCmdStateOutput *state);
 RZ_IPI RzCmdStatus rz_core_binxtr_plugin_print(const RzBinXtrPlugin *bx, RzCmdStateOutput *state);

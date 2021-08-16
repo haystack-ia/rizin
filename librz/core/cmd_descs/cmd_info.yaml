@@ -318,15 +318,12 @@ commands:
       - RZ_OUTPUT_MODE_JSON
     args: []
   - name: iV
-    handler: cmd_info
     cname: cmd_info_versions
-    summary: Show info of current file
+    summary: Display file version info
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
-    default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
-      - RZ_OUTPUT_MODE_TABLE
+      - RZ_OUTPUT_MODE_STANDARD
       - RZ_OUTPUT_MODE_JSON
-      - RZ_OUTPUT_MODE_QUIET
     args: []
   - name: iw
     handler: cmd_info

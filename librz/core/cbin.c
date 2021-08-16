@@ -6162,6 +6162,21 @@ RZ_IPI void rz_core_bin_resources_print(RzCore *core, RzCmdStateOutput *state) {
 	}
 }
 
+RZ_IPI void rz_core_bin_versions_print(RzCore *core, RzCmdStateOutput *state) {
+	// TODO: add rz_bin_object_get_versions and switch to table + json output
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_STANDARD:
+		bin_versioninfo(core, NULL, RZ_MODE_PRINT);
+		break;
+	case RZ_OUTPUT_MODE_JSON:
+		bin_versioninfo(core, state->d.pj, RZ_MODE_JSON);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+}
+
 static void print_arch(RzBin *bin, RzCmdStateOutput *state, int num, ut64 offset, ut64 size,
 	const char *arch, int bits, const char *machine, const char *flag, RzBinInfo *info) {
 
