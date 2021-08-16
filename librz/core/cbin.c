@@ -2588,6 +2588,20 @@ static void sections_print_table(RzCore *core, RzTable *t, RzBinObject *o, RzBin
 	}
 }
 
+static void sections_headers_setup(RzCore *core, RzCmdStateOutput *state, RzList *hashes) {
+	RzListIter *iter;
+	char *hashname;
+
+	rz_cmd_state_output_set_columnsf(state, "XxXxssssx", "paddr", "size", "vaddr", "vsize", "perm", "name", "type", "flags", "align");
+
+	rz_list_foreach(hashes, iter, hashname) {
+		const RzMsgDigestPlugin *msg_plugin = rz_msg_digest_plugin_by_name(hashname);
+		if (msg_plugin) {
+			rz_cmd_state_output_set_columnsf(state, "s", msg_plugin->name);
+		}
+	}
+}
+
 RZ_IPI void rz_core_bin_sections_print(RzCore *core, RzCmdStateOutput *state, RzList *hashes) {
 	RzBinFile *bf = rz_bin_cur(core->bin);
 	RzBinObject *o = bf ? bf->o : NULL;
@@ -2598,17 +2612,9 @@ RZ_IPI void rz_core_bin_sections_print(RzCore *core, RzCmdStateOutput *state, Rz
 	const RzList *sections = rz_bin_object_get_sections(o);
 	RzBinSection *section;
 	RzListIter *iter;
-	char *hashname;
 
 	rz_cmd_state_output_array_start(state);
-	rz_cmd_state_output_set_columnsf(state, "XxXxssssx", "paddr", "size", "vaddr", "vsize", "perm", "name", "type", "flags", "align");
-
-	rz_list_foreach(hashes, iter, hashname) {
-		const RzMsgDigestPlugin *msg_plugin = rz_msg_digest_plugin_by_name(hashname);
-		if (msg_plugin) {
-			rz_cmd_state_output_set_columnsf(state, "s", msg_plugin->name);
-		}
-	}
+	sections_headers_setup(core, state, hashes);
 
 	rz_list_foreach (sections, iter, section) {
 		switch(state->mode) {
@@ -2625,6 +2631,30 @@ RZ_IPI void rz_core_bin_sections_print(RzCore *core, RzCmdStateOutput *state, Rz
 	}
 
 	rz_cmd_state_output_array_end(state);
+}
+
+RZ_IPI void rz_core_bin_cur_section_print(RzCore *core, RzCmdStateOutput *state, RzList *hashes) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	RzBinObject *o = bf ? bf->o : NULL;
+	if (!o) {
+		return;
+	}
+
+	int va = (core->io->va || core->bin->is_debugger) ? VA_TRUE : VA_FALSE;
+	RzBinSection *section = rz_bin_get_section_at(o, core->offset, va);
+	sections_headers_setup(core, state, hashes);
+
+	switch(state->mode) {
+	case RZ_OUTPUT_MODE_JSON:
+		sections_print_json(core, state->d.pj, o, section, hashes);
+		break;
+	case RZ_OUTPUT_MODE_TABLE:
+		sections_print_table(core, state->d.t, o, section, hashes);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
 }
 
 RZ_IPI void rz_core_bin_segments_print(RzCore *core, RzCmdStateOutput *state, RzList *hashes) {

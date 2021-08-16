@@ -1302,6 +1302,16 @@ RZ_IPI RzCmdStatus rz_cmd_info_sections_handler(RzCore *core, int argc, const ch
 	return RZ_CMD_STATUS_OK;
 }
 
+RZ_IPI RzCmdStatus rz_cmd_info_cur_section_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	RzList *hashes = rz_list_new_from_array((const void **)argv + 1, argc - 1);
+	if (!hashes) {
+		return RZ_CMD_STATUS_ERROR;
+	}
+	rz_core_bin_cur_section_print(core, state, hashes);
+	rz_list_free(hashes);
+	return RZ_CMD_STATUS_OK;
+}
+
 RZ_IPI RzCmdStatus rz_cmd_info_segments_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
 	RzList *hashes = rz_list_new_from_array((const void **)argv + 1, argc - 1);
 	if (!hashes) {
