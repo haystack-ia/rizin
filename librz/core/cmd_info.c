@@ -1465,3 +1465,8 @@ RZ_IPI RzCmdStatus rz_cmd_info_memory_handler(RzCore *core, int argc, const char
 	rz_core_bin_memory_print(core, state);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_resources_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_resources_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
