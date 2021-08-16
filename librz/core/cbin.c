@@ -6097,6 +6097,56 @@ RZ_IPI char *rz_core_bin_pdb_get_filename(RzCore *core) {
 		symstore_path, base_file, info->guid, base_file);
 }
 
+static void bin_memory_print_rec(RzCmdStateOutput *state, RzBinMem *mirror, const RzList *mems, int perms) {
+	RzListIter *it;
+	RzBinMem *mem;
+
+	rz_list_foreach (mems, it, mem) {
+		switch (state->mode) {
+		case RZ_OUTPUT_MODE_JSON:
+			pj_o(state->d.pj);
+			pj_ks(state->d.pj, "name", mem->name);
+			pj_ki(state->d.pj, "size", mem->size);
+			pj_kn(state->d.pj, "address", mem->addr);
+			pj_ks(state->d.pj, "flags", rz_str_rwx_i(mem->perms & perms));
+			if (mirror) {
+				pj_ks(state->d.pj, "mirror", mirror->name);
+			}
+			pj_end(state->d.pj);
+			break;
+		case RZ_OUTPUT_MODE_TABLE:
+			rz_table_add_rowf(state->d.t, "sxXss", mem->name, mem->size,
+				mem->addr, rz_str_rwx_i(mem->perms & perms),
+				mirror ? mirror->name : "");
+			break;
+		case RZ_OUTPUT_MODE_QUIET:
+			rz_cons_printf("0x%08" PFMT64x "\n", mem->addr);
+			break;
+		default:
+			rz_warn_if_reached();
+			break;
+		}
+
+		if (mem->mirrors) {
+			bin_memory_print_rec(state, mem, mem->mirrors, mem->perms & perms);
+		}
+	}
+
+}
+
+RZ_IPI void rz_core_bin_memory_print(RzCore *core, RzCmdStateOutput *state) {
+	rz_cmd_state_output_array_start(state);
+	rz_cmd_state_output_set_columnsf(state, "sxXss", "name", "size", "address", "flags", "mirror");
+
+	RzBinObject *o = rz_bin_cur_object(core->bin);
+	if (!o) {
+		return;
+	}
+	const RzList *mems = rz_bin_object_get_mem(o);
+	bin_memory_print_rec(state, NULL, mems, 7);
+	rz_cmd_state_output_array_end(state);
+}
+
 static void print_arch(RzBin *bin, RzCmdStateOutput *state, int num, ut64 offset, ut64 size,
 	const char *arch, int bits, const char *machine, const char *flag, RzBinInfo *info) {
 

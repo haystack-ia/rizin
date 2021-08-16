@@ -203,9 +203,8 @@ commands:
         type: RZ_CMD_ARG_TYPE_STRING
         optional: true
   - name: im
-    handler: cmd_info
     cname: cmd_info_memory
-    summary: Show info of current file
+    summary: Show info about predefined memory allocation
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
     default_mode: RZ_OUTPUT_MODE_TABLE
     modes:

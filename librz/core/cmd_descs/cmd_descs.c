@@ -2695,7 +2695,7 @@ static const RzCmdDescArg cmd_info_memory_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_memory_help = {
-	.summary = "Show info of current file",
+	.summary = "Show info about predefined memory allocation",
 	.args = cmd_info_memory_args,
 };
 
@@ -5894,7 +5894,7 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	RzCmdDesc *cmd_info_plugins_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iL", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_plugins_handler, &cmd_info_plugins_help);
 	rz_warn_if_fail(cmd_info_plugins_cd);
 
-	RzCmdDesc *cmd_info_memory_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "im", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_memory_help);
+	RzCmdDesc *cmd_info_memory_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "im", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_memory_handler, &cmd_info_memory_help);
 	rz_warn_if_fail(cmd_info_memory_cd);
 	rz_cmd_desc_set_default_mode(cmd_info_memory_cd, RZ_OUTPUT_MODE_TABLE);
 

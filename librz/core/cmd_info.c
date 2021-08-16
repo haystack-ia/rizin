@@ -1460,3 +1460,8 @@ RZ_IPI RzCmdStatus rz_cmd_info_demangle_handler(RzCore *core, int argc, const ch
 	demangle_internal(core, argv[1], argv[2]);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_memory_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_memory_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
