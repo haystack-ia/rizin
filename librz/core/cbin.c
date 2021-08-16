@@ -6230,39 +6230,46 @@ RZ_IPI void rz_core_bin_trycatch_print(RzCore *core, RzCmdStateOutput *state) {
 	}
 }
 
-static void print_arch(RzBin *bin, RzCmdStateOutput *state, int num, ut64 offset, ut64 size,
-	const char *arch, int bits, const char *machine, const char *flag, RzBinInfo *info) {
+struct arch_ctx {
+	ut64 offset;
+	ut64 size;
+	const char *arch;
+	int bits;
+	const char *machine;
+};
+
+static void print_arch(RzBin *bin, RzCmdStateOutput *state, int num, struct arch_ctx *ctx, const char *flag, RzBinInfo *info) {
 
 	char str_fmt[30];
 	const char *fmt = "dXnss";
 
 	switch (state->mode) {
 	case RZ_OUTPUT_MODE_QUIET:
-		rz_cons_printf("%s\n", arch);
+		rz_cons_printf("%s\n", ctx->arch);
 		break;
 	case RZ_OUTPUT_MODE_JSON:
 		pj_o(state->d.pj);
-		pj_ks(state->d.pj, "arch", arch);
-		pj_ki(state->d.pj, "bits", bits);
-		pj_kn(state->d.pj, "offset", offset);
-		pj_kn(state->d.pj, "size", size);
-		if (info && !strcmp(arch, "mips")) {
+		pj_ks(state->d.pj, "arch", ctx->arch);
+		pj_ki(state->d.pj, "bits", ctx->bits);
+		pj_kn(state->d.pj, "offset", ctx->offset);
+		pj_kn(state->d.pj, "size", ctx->size);
+		if (info && !strcmp(ctx->arch, "mips")) {
 			pj_ks(state->d.pj, "isa", info->cpu);
 			pj_ks(state->d.pj, "features", info->features);
 		}
-		if (machine) {
-			pj_ks(state->d.pj, "machine", machine);
+		if (ctx->machine) {
+			pj_ks(state->d.pj, "machine", ctx->machine);
 		}
 		pj_end(state->d.pj);
 		break;
 	case RZ_OUTPUT_MODE_TABLE:
 	case RZ_OUTPUT_MODE_STANDARD:
 		if (flag && strcmp(flag, "unknown_flag")) {
-			rz_strf(str_fmt, "%s_%i %s", arch, bits, flag);
+			rz_strf(str_fmt, "%s_%i %s", ctx->arch, ctx->bits, flag);
 		} else {
-			rz_strf(str_fmt, "%s_%i", arch, bits);
+			rz_strf(str_fmt, "%s_%i", ctx->arch, ctx->bits);
 		}
-		rz_table_add_rowf(state->d.t, fmt, 0, offset, size, str_fmt, machine);
+		rz_table_add_rowf(state->d.t, fmt, 0, ctx->offset, ctx->size, str_fmt, ctx->machine);
 		break;
 	default:
 		rz_warn_if_reached();
@@ -6291,22 +6298,27 @@ RZ_API void rz_core_bin_archs_print(RzBin *bin, RzCmdStateOutput *state) {
 				!xtr_data->metadata->arch) {
 				continue;
 			}
-			char *arch = xtr_data->metadata->arch;
-			char *machine = xtr_data->metadata->machine;
-			int bits = xtr_data->metadata->bits;
+			struct arch_ctx ctx = { 0 };
+			ctx.offset = xtr_data->offset;
+			ctx.size = xtr_data->size;
+			ctx.arch = xtr_data->metadata->arch;
+			ctx.bits = xtr_data->metadata->bits;
+			ctx.machine = xtr_data->metadata->machine;
 
-			print_arch(bin, state, i++, xtr_data->offset, xtr_data->size, arch, bits, machine, NULL, NULL);
+			print_arch(bin, state, i++, &ctx, NULL, NULL);
 		}
 	} else {
 		RzBinObject *obj = binfile->o;
 		RzBinInfo *info = obj->info;
-		char bits = info ? info->bits : 0;
-		ut64 boffset = obj->boffset;
-		ut64 obj_size = obj->obj_size;
-		const char *arch = info ? info->arch : "unk_0";
-		const char *machine = info ? info->machine : "unknown_machine";
+		struct arch_ctx ctx = { 0 };
+		ctx.offset = obj->boffset;
+		ctx.size = obj->obj_size;
+		ctx.arch = info ? info->arch : "unk_0";
+		ctx.bits = info ? info->bits : 0;
+		ctx.machine = info ? info->machine : "unknown_machine";
+
 		const char *h_flag = info ? info->head_flag : NULL;
-		print_arch(bin, state, 0, boffset, obj_size, arch, bits, machine, h_flag, info);
+		print_arch(bin, state, 0, &ctx, h_flag, info);
 	}
 
 	rz_cmd_state_output_array_end(state);
