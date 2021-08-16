@@ -905,7 +905,6 @@ RZ_API const RzList *rz_bin_object_get_classes(RzBinObject *obj);
 RZ_API const RzList *rz_bin_object_get_strings(RzBinObject *obj);
 RZ_API const RzList *rz_bin_object_get_mem(RzBinObject *obj);
 RZ_API const RzList *rz_bin_object_get_resources(RzBinObject *obj);
-RZ_API char *rz_bin_object_get_signature(RzBinObject *obj);
 RZ_API const RzList *rz_bin_object_get_symbols(RzBinObject *obj);
 RZ_API const RzList *rz_bin_object_reset_strings(RzBin *bin, RzBinFile *bf, RzBinObject *obj);
 RZ_API bool rz_bin_object_is_string(RzBinObject *obj, ut64 va);
