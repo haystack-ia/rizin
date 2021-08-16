@@ -1470,3 +1470,79 @@ RZ_IPI RzCmdStatus rz_cmd_info_resources_handler(RzCore *core, int argc, const c
 	rz_core_bin_resources_print(core, state);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_hashes_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	ut64 limit = rz_config_get_i(core->config, "bin.hashlimit");
+	RzBinInfo *info = rz_bin_get_info(core->bin);
+	if (!info) {
+		eprintf("Cannot get bin info\n");
+		return RZ_CMD_STATUS_ERROR;
+	}
+
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	if (!bf) {
+		eprintf("Cannot get current binary file\n");
+		return RZ_CMD_STATUS_ERROR;
+	}
+
+	RzList *new_hashes = rz_bin_file_compute_hashes(core->bin, bf, limit);
+	RzList *old_hashes = rz_bin_file_set_hashes(core->bin, new_hashes);
+	bool equal = true;
+	if (!rz_list_empty(new_hashes) && !rz_list_empty(old_hashes)) {
+		if (!is_equal_file_hashes(new_hashes, old_hashes, &equal)) {
+			eprintf("Cannot compare file hashes\n");
+			rz_list_free(old_hashes);
+			return RZ_CMD_STATUS_ERROR;
+		}
+	}
+	RzBinFileHash *fh_old, *fh_new;
+	RzListIter *hiter_old, *hiter_new;
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_JSON:
+		pj_o(state->d.pj);
+		rz_list_foreach (new_hashes, hiter_new, fh_new) {
+			pj_ks(state->d.pj, fh_new->type, fh_new->hex);
+		}
+		if (!equal) {
+			// print old hashes prefixed with `o` character like `omd5` and `isha1`
+			rz_list_foreach (old_hashes, hiter_old, fh_old) {
+				char *key = rz_str_newf("o%s", fh_old->type);
+				pj_ks(state->d.pj, key, fh_old->hex);
+				free(key);
+			}
+		}
+		pj_end(state->d.pj);
+		break;
+	case RZ_OUTPUT_MODE_STANDARD:
+		if (!equal) {
+			eprintf("File has been modified.\n");
+			hiter_new = rz_list_iterator(new_hashes);
+			hiter_old = rz_list_iterator(old_hashes);
+			while (rz_list_iter_next(hiter_new) && rz_list_iter_next(hiter_old)) {
+				fh_new = (RzBinFileHash *)rz_list_iter_get(hiter_new);
+				fh_old = (RzBinFileHash *)rz_list_iter_get(hiter_old);
+				if (strcmp(fh_new->type, fh_old->type)) {
+					eprintf("Wrong file hashes structure");
+				}
+				if (!strcmp(fh_new->hex, fh_old->hex)) {
+					eprintf("= %s %s\n", fh_new->type, fh_new->hex); // output one line because hash remains same `= hashtype hashval`
+				} else {
+					// output diff-like two lines, one with old hash val `- hashtype hashval` and one with new `+ hashtype hashval`
+					eprintf("- %s %s\n+ %s %s\n",
+						fh_old->type, fh_old->hex,
+						fh_new->type, fh_new->hex);
+				}
+			}
+		} else { // hashes are equal
+			rz_list_foreach (new_hashes, hiter_new, fh_new) {
+				rz_cons_printf("%s %s\n", fh_new->type, fh_new->hex);
+			}
+		}
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+	rz_list_free(old_hashes);
+	return RZ_CMD_STATUS_OK;
+}
