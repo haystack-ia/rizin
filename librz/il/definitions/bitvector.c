@@ -1,25 +1,31 @@
 // SPDX-FileCopyrightText: 2021 heersin <teablearcher@gmail.com>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "bitvector.h"
+#include <rz_il/definitions/bitvector.h>
 
 /**
  * New a `length`-bits bitvector
  * \param length int, the length of bitvector
  * \return bv RzILBitVector, pointer to the new bitvector instance
  */
-RZ_API RzILBitVector rz_il_bv_new(int length) {
+RZ_API RzILBitVector rz_il_bv_new0(ut32 length) {
 	RzILBitVector ret = (RzILBitVector)malloc(sizeof(struct bitvector_t));
 	if (ret == NULL) {
 		return NULL;
 	}
 
+	if (length == 0) {
+		RZ_LOG_ERROR("Create a bitvector with 0 length\n");
+		return NULL;
+	}
+
 	// how much ut8 do we need to represent `length` bits ?
-	int real_elem_cnt = NELEM(length, sizeof(ut8));
+	int real_elem_cnt = NELEM(length, BV_ELEM_SIZE);
 
 	ret->bits = (ut8 *)calloc(real_elem_cnt, sizeof(ut8));
 	ret->len = length;
 	ret->_elem_len = real_elem_cnt;
+	ret->endian = BV_BIG_END;
 
 	if (ret->bits == NULL) {
 		free(ret);
@@ -55,7 +61,7 @@ RZ_API RzILBitVector rz_il_bv_dump(RzILBitVector bv) {
 		return NULL;
 	}
 
-	RzILBitVector new_bv = rz_il_bv_new(bv->len);
+	RzILBitVector new_bv = rz_il_bv_new0(bv->len);
 	if (!new_bv || !(new_bv->bits)) {
 		return NULL;
 	}
@@ -98,8 +104,8 @@ RZ_API int rz_il_bv_copy(RzILBitVector src, RzILBitVector dst) {
  * \return copied_size int, Actual copied size
  */
 RZ_API int rz_il_bv_copy_nbits(
-	RzILBitVector src, int src_start_pos,
-	RzILBitVector dst, int dst_start_pos,
+	RzILBitVector src, ut32 src_start_pos,
+	RzILBitVector dst, ut32 dst_start_pos,
 	int nbit) {
 	if (!dst || !(dst->bits) || !src || !(src->bits)) {
 		return 0;
@@ -129,12 +135,12 @@ RZ_API int rz_il_bv_copy_nbits(
  * \param new_len int, target length
  * \return ret RzILBitVector, pointer to the new bitvector
  */
-RzILBitVector bv_adjust(RzILBitVector bv, int new_len) {
+RzILBitVector bv_adjust(RzILBitVector bv, ut32 new_len) {
 	if (!bv || !bv->bits) {
 		return NULL;
 	}
 
-	RzILBitVector ret = rz_il_bv_new(new_len);
+	RzILBitVector ret = rz_il_bv_new0(new_len);
 	if (ret == NULL) {
 		return NULL;
 	}
@@ -152,18 +158,18 @@ RzILBitVector bv_adjust(RzILBitVector bv, int new_len) {
  * \param delta_len int, the number of zero bits
  * \return ret RzILBitVector, pointer to the new bitvector instance
  */
-RZ_API RzILBitVector rz_il_bv_prepend_zero(RzILBitVector bv, int delta_len) {
+RZ_API RzILBitVector rz_il_bv_prepend_zero(RzILBitVector bv, ut32 delta_len) {
 	if (!bv || !bv->bits) {
 		return NULL;
 	}
 
-	int new_len = bv->len + delta_len;
-	RzILBitVector ret = rz_il_bv_new(new_len);
+	ut32 new_len = bv->len + delta_len;
+	RzILBitVector ret = rz_il_bv_new0(new_len);
 	if (ret == NULL) {
 		return NULL;
 	}
 
-	int pos = delta_len;
+	ut32 pos = delta_len;
 	for (int i = 0; i < bv->len; ++i, ++pos) {
 		rz_il_bv_set(ret, pos, rz_il_bv_get(bv, i));
 	}
@@ -176,13 +182,13 @@ RZ_API RzILBitVector rz_il_bv_prepend_zero(RzILBitVector bv, int delta_len) {
  * \param delta_len, the number of zero bits
  * \return ret RzILBitVector, pointert to the new btivector
  */
-RZ_API RzILBitVector rz_il_bv_append_zero(RzILBitVector bv, int delta_len) {
+RZ_API RzILBitVector rz_il_bv_append_zero(RzILBitVector bv, ut32 delta_len) {
 	if (!bv || !bv->bits) {
 		return NULL;
 	}
 
-	int new_len = bv->len + delta_len;
-	RzILBitVector ret = rz_il_bv_new(new_len);
+	ut32 new_len = bv->len + delta_len;
+	RzILBitVector ret = rz_il_bv_new0(new_len);
 	if (ret == NULL) {
 		return NULL;
 	}
@@ -199,14 +205,14 @@ RZ_API RzILBitVector rz_il_bv_append_zero(RzILBitVector bv, int delta_len) {
  * \param delta_len, the number of zero bits
  * \return ret RzILBitVector, pointert to the new btivector
  */
-RZ_API RzILBitVector rz_il_bv_cut_head(RzILBitVector bv, int delta_len) {
-	int new_len = bv->len - delta_len;
-	RzILBitVector ret = rz_il_bv_new(new_len);
+RZ_API RzILBitVector rz_il_bv_cut_head(RzILBitVector bv, ut32 delta_len) {
+	ut32 new_len = bv->len - delta_len;
+	RzILBitVector ret = rz_il_bv_new0(new_len);
 	if (!ret) {
 		return NULL;
 	}
 
-	int pos, i;
+	ut32 pos, i;
 	for (pos = 0, i = delta_len; pos < new_len; ++i, ++pos) {
 		rz_il_bv_set(ret, pos, rz_il_bv_get(bv, i));
 	}
@@ -220,9 +226,9 @@ RZ_API RzILBitVector rz_il_bv_cut_head(RzILBitVector bv, int delta_len) {
  * \param delta_len, the number of zero bits
  * \return ret RzILBitVector, pointert to the new btivector
  */
-RZ_API RzILBitVector rz_il_bv_cut_tail(RzILBitVector bv, int delta_len) {
-	int new_len = bv->len - delta_len;
-	RzILBitVector ret = rz_il_bv_new(new_len);
+RZ_API RzILBitVector rz_il_bv_cut_tail(RzILBitVector bv, ut32 delta_len) {
+	ut32 new_len = bv->len - delta_len;
+	RzILBitVector ret = rz_il_bv_new0(new_len);
 	if (!ret) {
 		return NULL;
 	}
@@ -246,7 +252,7 @@ RZ_API RzILBitVector rz_il_bv_concat(RzILBitVector bv1, RzILBitVector bv2) {
 	}
 
 	// 1. create a max length new_bv
-	int new_len = bv1->len + bv2->len;
+	ut32 new_len = bv1->len + bv2->len;
 
 	// 2. adjust two vector to max_len bv
 	RzILBitVector ret = bv_adjust(bv1, new_len);
@@ -271,7 +277,7 @@ RZ_API RzILBitVector rz_il_bv_concat(RzILBitVector bv1, RzILBitVector bv2) {
  * \param b bit, true or false (set or unset)
  * \return ret bool, bool value at `pos` after this operation
  */
-RZ_API bool rz_il_bv_set(RzILBitVector bv, int pos, bool b) {
+RZ_API bool rz_il_bv_set(RzILBitVector bv, ut32 pos, bool b) {
 	if (b) {
 		(bv->bits)[pos / BV_ELEM_SIZE] |= (1u << (pos % BV_ELEM_SIZE));
 	} else {
@@ -308,7 +314,7 @@ RZ_API bool rz_il_bv_set_all(RzILBitVector bv, bool b) {
  * \param b bit, true or false (set or unset)
  * \return ret bool, bool value at `pos` after this operation
  */
-RZ_API bool rz_il_bv_toggle(RzILBitVector bv, int pos) {
+RZ_API bool rz_il_bv_toggle(RzILBitVector bv, ut32 pos) {
 	bool cur_bit = rz_il_bv_get(bv, pos);
 	bool new_bit = cur_bit ? false : true;
 	rz_il_bv_set(bv, pos, new_bit);
@@ -334,7 +340,7 @@ RZ_API bool rz_il_bv_toggle_all(RzILBitVector bv) {
  * \param pos int, position
  * \return ret bit, bool value of bit
  */
-RZ_API bool rz_il_bv_get(RzILBitVector bv, int pos) {
+RZ_API bool rz_il_bv_get(RzILBitVector bv, ut32 pos) {
 	return ((bv->bits)[pos / BV_ELEM_SIZE] & (1u << (pos % BV_ELEM_SIZE))) ? true : false;
 }
 
@@ -345,7 +351,7 @@ RZ_API bool rz_il_bv_get(RzILBitVector bv, int pos) {
  * \param size int, shift bits
  * \return flag bool, success or not
  */
-RZ_API bool rz_il_bv_lshift(RzILBitVector bv, int size) {
+RZ_API bool rz_il_bv_lshift(RzILBitVector bv, ut32 size) {
 	return rz_il_bv_lshift_fill(bv, size, false);
 }
 
@@ -356,7 +362,7 @@ RZ_API bool rz_il_bv_lshift(RzILBitVector bv, int size) {
  * \param size int, shift bits
  * \return flag bool, success or not
  */
-RZ_API bool rz_il_bv_rshift(RzILBitVector bv, int size) {
+RZ_API bool rz_il_bv_rshift(RzILBitVector bv, ut32 size) {
 	return rz_il_bv_rshift_fill(bv, size, false);
 }
 
@@ -368,7 +374,7 @@ RZ_API bool rz_il_bv_rshift(RzILBitVector bv, int size) {
  * \param fill_bit bool, bit used in filling
  * \return flag bool, success or not
  */
-RZ_API bool rz_il_bv_lshift_fill(RzILBitVector bv, int size, bool fill_bit) {
+RZ_API bool rz_il_bv_lshift_fill(RzILBitVector bv, ut32 size, bool fill_bit) {
 	// left shift
 	if (size <= 0) {
 		return false;
@@ -379,7 +385,7 @@ RZ_API bool rz_il_bv_lshift_fill(RzILBitVector bv, int size, bool fill_bit) {
 		return true;
 	}
 
-	RzILBitVector tmp = rz_il_bv_new(bv->len);
+	RzILBitVector tmp = rz_il_bv_new0(bv->len);
 	rz_il_bv_set_all(tmp, fill_bit);
 
 	int copied_size = rz_il_bv_copy_nbits(bv, size, tmp, 0, bv->len - size);
@@ -404,7 +410,7 @@ RZ_API bool rz_il_bv_lshift_fill(RzILBitVector bv, int size, bool fill_bit) {
  * \param fill_bit bool, bit used in filling
  * \return flag bool, success or not
  */
-RZ_API bool rz_il_bv_rshift_fill(RzILBitVector bv, int size, bool fill_bit) {
+RZ_API bool rz_il_bv_rshift_fill(RzILBitVector bv, ut32 size, bool fill_bit) {
 	// left shift
 	if (size <= 0) {
 		return false;
@@ -415,7 +421,7 @@ RZ_API bool rz_il_bv_rshift_fill(RzILBitVector bv, int size, bool fill_bit) {
 		return true;
 	}
 
-	RzILBitVector tmp = rz_il_bv_new(bv->len);
+	RzILBitVector tmp = rz_il_bv_new0(bv->len);
 	rz_il_bv_set_all(tmp, fill_bit);
 
 	int copied_size = rz_il_bv_copy_nbits(bv, 0, tmp, size, tmp->len - size);
@@ -444,7 +450,7 @@ RZ_API RzILBitVector rz_il_bv_and(RzILBitVector x, RzILBitVector y) {
 		return NULL;
 	}
 
-	RzILBitVector ret = rz_il_bv_new(x->len);
+	RzILBitVector ret = rz_il_bv_new0(x->len);
 	for (int i = 0; i < ret->_elem_len; ++i) {
 		ret->bits[i] = x->bits[i] & y->bits[i];
 	}
@@ -463,7 +469,7 @@ RZ_API RzILBitVector rz_il_bv_or(RzILBitVector x, RzILBitVector y) {
 		return NULL;
 	}
 
-	RzILBitVector ret = rz_il_bv_new(x->len);
+	RzILBitVector ret = rz_il_bv_new0(x->len);
 	for (int i = 0; i < ret->_elem_len; ++i) {
 		ret->bits[i] = x->bits[i] | y->bits[i];
 	}
@@ -482,7 +488,7 @@ RZ_API RzILBitVector rz_il_bv_xor(RzILBitVector x, RzILBitVector y) {
 		return NULL;
 	}
 
-	RzILBitVector ret = rz_il_bv_new(x->len);
+	RzILBitVector ret = rz_il_bv_new0(x->len);
 	for (int i = 0; i < ret->_elem_len; ++i) {
 		ret->bits[i] = x->bits[i] ^ y->bits[i];
 	}
@@ -495,8 +501,8 @@ RZ_API RzILBitVector rz_il_bv_xor(RzILBitVector x, RzILBitVector y) {
  * \return ret RzILBitVector, a new bitvector, which is the 1's complement of bv
  */
 RZ_API RzILBitVector rz_il_bv_complement_1(RzILBitVector bv) {
-	RzILBitVector ret = rz_il_bv_new(bv->len);
-	int real_elem_cnt = bv->_elem_len;
+	RzILBitVector ret = rz_il_bv_new0(bv->len);
+	ut32 real_elem_cnt = bv->_elem_len;
 	for (int i = 0; i < real_elem_cnt; ++i) {
 		ret->bits[i] = ~bv->bits[i];
 	}
@@ -513,7 +519,7 @@ RZ_API RzILBitVector rz_il_bv_complement_2(RzILBitVector bv) {
 	// flip/toggle every bit before it
 	RzILBitVector ret = rz_il_bv_dump(bv);
 
-	int i;
+	ut32 i;
 	for (i = bv->len - 1; i > 0; --i) {
 		if (rz_il_bv_get(bv, i) == true) {
 			break;
@@ -541,9 +547,9 @@ RZ_API RzILBitVector rz_il_bv_add(RzILBitVector x, RzILBitVector y) {
 	}
 
 	bool a, b, carry;
-	int len = x->len;
-	int pos, i;
-	RzILBitVector ret = rz_il_bv_new(len);
+	ut32 len = x->len;
+	ut32 pos, i;
+	RzILBitVector ret = rz_il_bv_new0(len);
 	carry = false;
 
 	for (i = 0, pos = len - 1; i < len; ++i, --pos) {
@@ -586,10 +592,10 @@ RZ_API RzILBitVector rz_il_bv_mul(RzILBitVector x, RzILBitVector y) {
 		return NULL;
 	}
 
-	result = rz_il_bv_new(x->len);
+	result = rz_il_bv_new0(x->len);
 	dump = rz_il_bv_dump(x);
 
-	int index;
+	ut32 index;
 
 	for (int i = 0; i < y->len; ++i) {
 		index = y->len - i - 1;
@@ -616,7 +622,7 @@ int bv_unsigned_cmp(RzILBitVector x, RzILBitVector y) {
 		return 0;
 	}
 
-	int len = x->len;
+	ut32 len = x->len;
 	bool x_bit, y_bit;
 	for (int i = 0; i < len; ++i) {
 		x_bit = rz_il_bv_get(x, i);
@@ -642,7 +648,7 @@ RZ_API RzILBitVector rz_il_bv_div(RzILBitVector x, RzILBitVector y) {
 	}
 
 	if (rz_il_bv_is_zero_vector(y)) {
-		RzILBitVector ret = rz_il_bv_new(y->len);
+		RzILBitVector ret = rz_il_bv_new0(y->len);
 		rz_il_bv_set_all(ret, true);
 		printf("[DIVIDE ZERO]\n");
 		return ret;
@@ -653,7 +659,7 @@ RZ_API RzILBitVector rz_il_bv_div(RzILBitVector x, RzILBitVector y) {
 	// dividend < divisor
 	// remainder = dividend, quotient = 0
 	if (compare_result < 0) {
-		return rz_il_bv_new(x->len);
+		return rz_il_bv_new0(x->len);
 	}
 
 	// dividend == divisor
@@ -706,7 +712,7 @@ RZ_API RzILBitVector rz_il_bv_mod(RzILBitVector x, RzILBitVector y) {
 	// dividend == divisor
 	// remainder = 0, quotient = dividend
 	if (compare_result == 0) {
-		return rz_il_bv_new(x->len);
+		return rz_il_bv_new0(x->len);
 	}
 
 	// dividend > divisor
@@ -847,7 +853,7 @@ RZ_API RzILBitVector rz_il_bv_smod(RzILBitVector x, RzILBitVector y) {
  * \return b bit, bool value of MSB
  */
 RZ_API bool rz_il_bv_msb(RzILBitVector bv) {
-	return (bv->endian == BIG_ENDIAN ? rz_il_bv_get(bv, 0) : rz_il_bv_get(bv, bv->len - 1));
+	return (bv->endian == BV_BIG_END ? rz_il_bv_get(bv, 0) : rz_il_bv_get(bv, bv->len - 1));
 }
 
 /**
@@ -856,7 +862,7 @@ RZ_API bool rz_il_bv_msb(RzILBitVector bv) {
  * \return b bit, bool value of LSB
  */
 RZ_API bool rz_il_bv_lsb(RzILBitVector bv) {
-	return (bv->endian == BIG_ENDIAN ? rz_il_bv_get(bv, bv->len - 1) : rz_il_bv_get(bv, 0));
+	return (bv->endian == BV_BIG_END ? rz_il_bv_get(bv, bv->len - 1) : rz_il_bv_get(bv, 0));
 }
 
 char *bv_to_string(RzILBitVector bv) {
@@ -942,8 +948,8 @@ RZ_API int rz_il_bv_cmp(RzILBitVector x, RzILBitVector y) {
 		return 1;
 	}
 
-	for (int i = 0; i < x->_elem_len; ++i) {
-		if (x->bits[i] != y->bits[i]) {
+	for (int i = 0; i < x->len; ++i) {
+		if (rz_il_bv_get(x, i) != rz_il_bv_get(y, i)) {
 			return 1;
 		}
 	}
@@ -956,7 +962,7 @@ RZ_API int rz_il_bv_cmp(RzILBitVector x, RzILBitVector y) {
  * \param bv RzILBitVector
  * \return len int, length of bitvector
  */
-RZ_API int rz_il_bv_len(RzILBitVector bv) {
+RZ_API ut32 rz_il_bv_len(RzILBitVector bv) {
 	return bv->len;
 }
 
@@ -966,8 +972,8 @@ RZ_API int rz_il_bv_len(RzILBitVector bv) {
  * \param value ut32, the value to convert
  * \return bv RzILBitVector, pointer to new bitvector
  */
-RZ_API RzILBitVector rz_il_bv_new_from_ut32(int length, ut32 value) {
-	RzILBitVector bv = rz_il_bv_new(32);
+RZ_API RzILBitVector rz_il_bv_new_from_ut32(ut32 length, ut32 value) {
+	RzILBitVector bv = rz_il_bv_new0(32);
 	RzILBitVector ret;
 	int type_size = 32;
 
@@ -1001,8 +1007,8 @@ RZ_API RzILBitVector rz_il_bv_new_from_ut32(int length, ut32 value) {
  * \param value ut64, the value to convert
  * \return bv RzILBitVector, pointer to new bitvector
  */
-RZ_API RzILBitVector rz_il_bv_new_from_ut64(int length, ut64 value) {
-	RzILBitVector bv = rz_il_bv_new(length);
+RZ_API RzILBitVector rz_il_bv_new_from_ut64(ut32 length, ut64 value) {
+	RzILBitVector bv = rz_il_bv_new0(length);
 	RzILBitVector ret;
 	int type_size = 64;
 

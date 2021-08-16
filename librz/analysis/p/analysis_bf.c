@@ -243,7 +243,7 @@ RzPVector *bf_llimit(RzILVM vm, BfContext *ctx, ut64 id, ut64 addr) {
 	//                  (do nothing)
 	//                  (goto ]))
 	char *cur_lbl_name = NULL, *dst_lbl_name = NULL;
-	EffectLabel cur_label, dst_label;
+	RzILEffectLabel cur_label, dst_label;
 	RzILBitVector cur_addr;
 
 	cur_lbl_name = ht_up_find(ctx->label_names, addr, NULL);
@@ -306,7 +306,7 @@ RzPVector *bf_rlimit(RzILVM vm, BfContext *ctx, ut64 id, ut64 addr) {
 	//                  (goto [)
 	//                  (do nothing))
 	char *cur_lbl_name = NULL, *dst_lbl_name = NULL;
-	EffectLabel dst_label;
+	RzILEffectLabel dst_label;
 	ut64 dst_addr;
 
 	cur_lbl_name = ht_up_find(ctx->label_names, addr, NULL);
@@ -370,8 +370,8 @@ static bool bf_specific_init(RzAnalysisRzil *rzil) {
 	// TODO use info of reg profile
 	rz_il_vm_add_reg(vm, "ptr", BF_ADDR_SIZE);
 
-	EffectLabel read_label = rz_il_vm_create_label_lazy(vm, "read");
-	EffectLabel write_label = rz_il_vm_create_label_lazy(vm, "write");
+	RzILEffectLabel read_label = rz_il_vm_create_label_lazy(vm, "read");
+	RzILEffectLabel write_label = rz_il_vm_create_label_lazy(vm, "write");
 	read_label->addr = (void *)bf_syscall_read;
 	write_label->addr = (void *)bf_syscall_write;
 	read_label->type = EFFECT_LABEL_SYSCALL;
@@ -580,7 +580,6 @@ RzAnalysisPlugin rz_analysis_plugin_bf = {
 	.license = "LGPL3",
 	.arch = "bf",
 	.bits = 8,
-	.esil = true,
 	.op = &bf_op,
 	.get_reg_profile = get_reg_profile,
 	.rzil_init = bf_init_rzil,

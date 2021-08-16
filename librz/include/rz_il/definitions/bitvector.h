@@ -1,14 +1,13 @@
 // SPDX-FileCopyrightText: 2021 heersin <teablearcher@gmail.com>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#ifndef CORE_THEORY_VM_BITVECTOR_H
-#define CORE_THEORY_VM_BITVECTOR_H
+#ifndef RZ_IL_BITVECTOR_H
+#define RZ_IL_BITVECTOR_H
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <rz_util.h>
 #include <rz_types.h>
-#include "common.h"
 
 #define NELEM(N, ELEMPER) ((N + (ELEMPER)-1) / (ELEMPER))
 #define BV_ELEM_SIZE      sizeof(ut8)
@@ -26,38 +25,38 @@ typedef enum {
  */
 struct bitvector_t {
 	ut8 *bits; ///< bits data
-	int _elem_len; ///< length of ut8 array -- real / physical
-	int len; ///< length of bits -- virtual / logical
+	ut32 _elem_len; ///< length of ut8 array -- real / physical
+	ut32 len; ///< length of bits -- virtual / logical
 	BV_ENDIAN endian; ///< control endian
 };
 
 typedef struct bitvector_t *RzILBitVector;
 
 // init
-RZ_API RzILBitVector rz_il_bv_new(int length);
+RZ_API RzILBitVector rz_il_bv_new0(ut32 length);
 RZ_API RzILBitVector rz_il_bv_dump(RzILBitVector bv);
 RZ_API RzILBitVector rz_il_bv_concat(RzILBitVector bv1, RzILBitVector bv2);
 RZ_API int rz_il_bv_copy(RzILBitVector src, RzILBitVector dst);
 RZ_API int rz_il_bv_copy_nbits(
-	RzILBitVector src, int src_start_pos,
-	RzILBitVector dst, int dst_start_pos,
+	RzILBitVector src, ut32 src_start_pos,
+	RzILBitVector dst, ut32 dst_start_pos,
 	int nbit);
 RZ_API void rz_il_bv_free(RzILBitVector bv);
 // read and write to a bit
-RZ_API bool rz_il_bv_set(RzILBitVector bv, int pos, bool b);
+RZ_API bool rz_il_bv_set(RzILBitVector bv, ut32 pos, bool b);
 RZ_API bool rz_il_bv_set_all(RzILBitVector bv, bool b);
-RZ_API bool rz_il_bv_toggle(RzILBitVector bv, int pos);
+RZ_API bool rz_il_bv_toggle(RzILBitVector bv, ut32 pos);
 RZ_API bool rz_il_bv_toggle_all(RzILBitVector bv);
-RZ_API RzILBitVector rz_il_bv_append_zero(RzILBitVector bv, int delta_len);
-RZ_API RzILBitVector rz_il_bv_prepend_zero(RzILBitVector bv, int delta_len);
-RZ_API RzILBitVector rz_il_bv_cut_head(RzILBitVector bv, int delta_len);
-RZ_API RzILBitVector rz_il_bv_cut_tail(RzILBitVector bv, int delta_len);
-RZ_API bool rz_il_bv_get(RzILBitVector bv, int pos);
+RZ_API RzILBitVector rz_il_bv_append_zero(RzILBitVector bv, ut32 delta_len);
+RZ_API RzILBitVector rz_il_bv_prepend_zero(RzILBitVector bv, ut32 delta_len);
+RZ_API RzILBitVector rz_il_bv_cut_head(RzILBitVector bv, ut32 delta_len);
+RZ_API RzILBitVector rz_il_bv_cut_tail(RzILBitVector bv, ut32 delta_len);
+RZ_API bool rz_il_bv_get(RzILBitVector bv, ut32 pos);
 // logic operations
-RZ_API bool rz_il_bv_lshift(RzILBitVector bv, int size);
-RZ_API bool rz_il_bv_rshift(RzILBitVector bv, int size);
-RZ_API bool rz_il_bv_lshift_fill(RzILBitVector bv, int size, bool fill_bit);
-RZ_API bool rz_il_bv_rshift_fill(RzILBitVector bv, int size, bool fill_bit);
+RZ_API bool rz_il_bv_lshift(RzILBitVector bv, ut32 size);
+RZ_API bool rz_il_bv_rshift(RzILBitVector bv, ut32 size);
+RZ_API bool rz_il_bv_lshift_fill(RzILBitVector bv, ut32 size, bool fill_bit);
+RZ_API bool rz_il_bv_rshift_fill(RzILBitVector bv, ut32 size, bool fill_bit);
 RZ_API RzILBitVector rz_il_bv_and(RzILBitVector x, RzILBitVector y);
 RZ_API RzILBitVector rz_il_bv_or(RzILBitVector x, RzILBitVector y);
 RZ_API RzILBitVector rz_il_bv_xor(RzILBitVector x, RzILBitVector y);
@@ -85,11 +84,11 @@ RZ_API ut64 rz_il_bv_to_ut64(RzILBitVector x);
 // misc
 RZ_API bool rz_il_bv_is_zero_vector(RzILBitVector x);
 RZ_API void rz_il_print_bv(RzILBitVector bv);
-RZ_API RzILBitVector rz_il_bv_new_from_ut32(int length, ut32 value);
-RZ_API RzILBitVector rz_il_bv_new_from_ut64(int length, ut64 value);
+RZ_API RzILBitVector rz_il_bv_new_from_ut32(ut32 length, ut32 value);
+RZ_API RzILBitVector rz_il_bv_new_from_ut64(ut32 length, ut64 value);
 
-RZ_API int rz_il_bv_len(RzILBitVector bv);
+RZ_API ut32 rz_il_bv_len(RzILBitVector bv);
 RZ_API int rz_il_bv_cmp(RzILBitVector x, RzILBitVector y);
 ut32 rz_il_bv_hash(RzILBitVector x);
 
-#endif //CORE_THEORY_VM_BITVECTOR_H
+#endif // RZ_IL_BITVECTOR_H

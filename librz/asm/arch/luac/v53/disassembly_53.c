@@ -58,7 +58,7 @@ int lua53_disasm(RzAsmOp *op, const ut8 *buf, int len, LuaOpNameList opnames) {
 	case OP_TAILCALL: /*  A B C   return R(A)(R(A+1), ... ,R(A+B-1))              */
 	case OP_NEWTABLE: /*  A B C   R(A) := {} (size = B,C)                         */
 	case OP_SETLIST: /*   A B C   R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B        */
-	case OP_LOADBOOL: /*  A B C   R(A) := (RzILBool)B; if (C) pc++                    */
+	case OP_LOADBOOL: /*  A B C   R(A) := (Bool)B; if (C) pc++                    */
 	case OP_SELF: /*      A B C   R(A+1) := R(B); R(A) := R(B)[RK(C)]             */
 		asm_string = luaop_new_str_3arg(opnames[opcode], a, b, c);
 		break;

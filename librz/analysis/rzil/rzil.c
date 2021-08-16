@@ -65,7 +65,9 @@ RZ_API bool rz_analysis_rzil_setup(RzAnalysis *analysis) {
 	rz_return_val_if_fail(analysis, false);
 
 	RzAnalysisRzil *rzil = rz_analysis_rzil_new();
-	rz_return_val_if_fail(rzil, false);
+	if (!rzil) {
+		return false;
+	}
 	analysis->rzil = rzil;
 
 	// init RZIL according to different archs
@@ -122,9 +124,9 @@ static void rz_analysis_rzil_parse_pvector(RzAnalysis *analysis, RzAnalysisRzil 
 
 /**
  * Collect both `trace` and `stats` info of an instruction
- * @param analysis
- * @param rzil
- * @param op
+ * \param analysis
+ * \param rzil
+ * \param op
  */
 RZ_API void rz_analysis_rzil_collect_info(RzAnalysis *analysis, RzAnalysisRzil *rzil, RzAnalysisOp *op, bool use_new) {
 	rz_return_if_fail(analysis && rzil && op);

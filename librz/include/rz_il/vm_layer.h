@@ -3,7 +3,7 @@
 
 #ifndef RZ_IL_CORE_THEORY_CMDS_H
 #define RZ_IL_CORE_THEORY_CMDS_H
-#include "core_theory_vm.h"
+#include "rzil_vm.h"
 
 // VM high level operations
 RZ_API bool rz_il_vm_init(RzILVM vm, ut64 start_addr, int addr_size, int data_size);
@@ -14,9 +14,9 @@ int rz_il_vm_printer_step(RzILOp op, char **helper);
 void rz_il_vm_list_printer_step(RzPVector *op_list);
 
 // Memory operations
-RZ_API Mem rz_il_vm_add_mem(RzILVM vm, int min_unit_size);
+RZ_API RzILMem rz_il_vm_add_mem(RzILVM vm, int min_unit_size);
 RZ_API RzILBitVector rz_il_vm_mem_load(RzILVM vm, int mem_index, RzILBitVector key);
-RZ_API Mem rz_il_vm_mem_store(RzILVM vm, int mem_index, RzILBitVector key, RzILBitVector value);
+RZ_API RzILMem rz_il_vm_mem_store(RzILVM vm, int mem_index, RzILBitVector key, RzILBitVector value);
 
 // utils
 RZ_API RzILBitVector rz_il_ut64_addr_to_bv(ut64 addr);

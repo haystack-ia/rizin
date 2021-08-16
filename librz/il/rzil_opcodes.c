@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2021 heersin <teablearcher@gmail.com>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "core_theory_opcodes.h"
+#include <rz_il/rzil_opcodes.h>
 
 #define RZIL_OP_NEW(size) calloc(1, (size))
 
@@ -106,6 +106,9 @@ RZ_API RzILOp rz_il_new_op(RzILOPCode code) {
  * \param op RzILOp, pointer to opcode instance
  */
 RZ_API void rz_il_free_op(RzILOp op) {
+	if (!op) {
+		return;
+	}
 	switch (op->code) {
 	case RZIL_OP_VAR:
 		free(op->op.var);

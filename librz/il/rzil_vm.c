@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2021 heersin <teablearcher@gmail.com>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "core_theory_vm.h"
+#include <rz_il/rzil_vm.h>
 
 /**
  * Create A new variable in VM
@@ -51,7 +51,7 @@ RZ_API RzILVal rz_il_vm_create_value(RzILVM vm, RZIL_VAR_TYPE type) {
 RZ_API void rz_il_vm_add_reg(RzILVM vm, char *name, int length) {
 	RzILVar var = rz_il_vm_create_variable(vm, name);
 	RzILVal val = rz_il_vm_create_value(vm, RZIL_VAR_TYPE_BV);
-	val->data.bv = rz_il_bv_new(length);
+	val->data.bv = rz_il_bv_new0(length);
 	rz_il_hash_bind(vm, var, val);
 }
 
@@ -176,7 +176,7 @@ RZ_API RzILBitVector rz_il_hash_find_addr_by_lblname(RzILVM vm, const char *lbl_
 	RzILBitVector ret;
 	bool found = false;
 
-	EffectLabel label = ht_pp_find(lbl_table, lbl_name, &found);
+	RzILEffectLabel label = ht_pp_find(lbl_table, lbl_name, &found);
 	if (found) {
 		ret = label->addr;
 		return ret;
@@ -188,10 +188,10 @@ RZ_API RzILBitVector rz_il_hash_find_addr_by_lblname(RzILVM vm, const char *lbl_
  * Find the label instance by name
  * \param vm RzILVM, pointer to VM
  * \param lbl_name string, the name of label
- * \return lbl EffectLabel, pointer to label instance
+ * \return lbl RzILEffectLabel, pointer to label instance
  */
-RZ_API EffectLabel rz_il_vm_find_label_by_name(RzILVM vm, const char *lbl_name) {
-	EffectLabel lbl = ht_pp_find(vm->vm_global_label_table, lbl_name, NULL);
+RZ_API RzILEffectLabel rz_il_vm_find_label_by_name(RzILVM vm, const char *lbl_name) {
+	RzILEffectLabel lbl = ht_pp_find(vm->vm_global_label_table, lbl_name, NULL);
 	return lbl;
 }
 
@@ -200,12 +200,12 @@ RZ_API EffectLabel rz_il_vm_find_label_by_name(RzILVM vm, const char *lbl_name) 
  * \param vm RzILVM, pointer to VM
  * \param name string, name of label
  * \param addr RzILBitVector, label address
- * \return lbl EffectLabel, pointer to label instance
+ * \return lbl RzILEffectLabel, pointer to label instance
  */
-RZ_API EffectLabel rz_il_vm_create_label(RzILVM vm, char *name, RzILBitVector addr) {
+RZ_API RzILEffectLabel rz_il_vm_create_label(RzILVM vm, char *name, RzILBitVector addr) {
 	HtPP *lbl_table = vm->vm_global_label_table;
 
-	EffectLabel lbl = effect_new_label(name, EFFECT_LABEL_ADDR);
+	RzILEffectLabel lbl = effect_new_label(name, EFFECT_LABEL_ADDR);
 	lbl->addr = rz_il_bv_dump(addr);
 	ht_pp_insert(lbl_table, name, lbl);
 
@@ -216,12 +216,12 @@ RZ_API EffectLabel rz_il_vm_create_label(RzILVM vm, char *name, RzILBitVector ad
  * Create a label without address, use rz_il_vm_update_label to update address for it
  * \param vm RzILVM, pointer to VM
  * \param name string, name of this label
- * \return lbl EffectLabel, pointer to label instance
+ * \return lbl RzILEffectLabel, pointer to label instance
  */
-RZ_API EffectLabel rz_il_vm_create_label_lazy(RzILVM vm, char *name) {
+RZ_API RzILEffectLabel rz_il_vm_create_label_lazy(RzILVM vm, char *name) {
 	HtPP *lbl_table = vm->vm_global_label_table;
 
-	EffectLabel lbl = effect_new_label(name, EFFECT_LABEL_ADDR);
+	RzILEffectLabel lbl = effect_new_label(name, EFFECT_LABEL_ADDR);
 	lbl->addr = NULL;
 	ht_pp_insert(lbl_table, name, lbl);
 
@@ -232,10 +232,10 @@ RZ_API EffectLabel rz_il_vm_create_label_lazy(RzILVM vm, char *name) {
  * Update the address info of a label
  * \param vm RzILVM, pointer to VM
  * \param name string, name of this label
- * \return lbl EffectLabel, pointer to label instance
+ * \return lbl RzILEffectLabel, pointer to label instance
  */
-RZ_API EffectLabel rz_il_vm_update_label(RzILVM vm, char *name, RzILBitVector addr) {
-	EffectLabel lbl = ht_pp_find(vm->vm_global_label_table, name, NULL);
+RZ_API RzILEffectLabel rz_il_vm_update_label(RzILVM vm, char *name, RzILBitVector addr) {
+	RzILEffectLabel lbl = ht_pp_find(vm->vm_global_label_table, name, NULL);
 	if (lbl->addr) {
 		rz_il_bv_free(lbl->addr);
 	}
@@ -286,7 +286,7 @@ RZ_API void rz_il_make_bv_temp(RzILVM vm, int store_index, RzILBitVector bv) {
  * \param store_index int, index of temporary value
  * \param eff Effect, pointer to core theory effect instance
  */
-RZ_API void rz_il_make_eff_temp(RzILVM vm, int store_index, Effect eff) {
+RZ_API void rz_il_make_eff_temp(RzILVM vm, int store_index, RzILEffect eff) {
 	RzILTemp temp = vm->temp_value_list[store_index];
 	temp->data = eff;
 	temp->type = RZIL_TEMP_EFF;
@@ -318,7 +318,7 @@ RZ_API RzILBitVector rz_il_get_bv_temp(RzILVM vm, int index) {
 	RzILTemp temp = vm->temp_value_list[index];
 
 	if (index == -1) {
-		eprintf("Please Tell Why\n");
+		rz_warn_if_reached();
 		return NULL;
 	}
 
@@ -332,17 +332,17 @@ RZ_API RzILBitVector rz_il_get_bv_temp(RzILVM vm, int index) {
 			return val->data.bv;
 		}
 		if (val->type == RZIL_VAR_TYPE_BOOL) {
-			printf("TODO: BOOL -> BITVECTOR\n");
+			eprintf("TODO: BOOL -> BITVECTOR\n");
 			return NULL;
 		}
 	}
 
 	if (temp->type == RZIL_TEMP_BOOL) {
-		printf("TODO: BOOL -> BITVECTOR\n");
+		eprintf("TODO: BOOL -> BITVECTOR\n");
 		return NULL;
 	}
 
-	printf("TYPES CANNOT CONVERT TO BITVECTOR\n");
+	eprintf("TYPES CANNOT CONVERT TO BITVECTOR\n");
 	return NULL;
 }
 
@@ -626,7 +626,7 @@ static bool print_vm_label_callback(void *user, const void *k, const void *v) {
 	printf("[%d] : ", *(int *)user);
 	*(int *)user += 1;
 
-	EffectLabel label = (EffectLabel)v;
+	RzILEffectLabel label = (RzILEffectLabel)v;
 	if (label == NULL) {
 		printf("None Label : <key> %p -- <value> %p\n", k, v);
 		return false;
@@ -691,7 +691,7 @@ RZ_API void rz_il_print_vm_temps(RzILVM vm) {
 			}
 
 			if (cur->type == RZIL_TEMP_EFF) {
-				printf("[EFF] TYPE-%d\n", ((Effect)cur->data)->effect_type);
+				printf("[EFF] TYPE-%d\n", ((RzILEffect)cur->data)->effect_type);
 				continue;
 			}
 		}

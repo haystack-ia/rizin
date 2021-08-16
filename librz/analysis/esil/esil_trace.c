@@ -10,7 +10,6 @@
 static int ocbs_set = false;
 static RzAnalysisEsilCallbacks ocbs = { 0 };
 
-// IL trace wrapper of esil
 static inline void esil_add_mem_trace(RzAnalysisEsilTrace *etrace, RzILTraceMemOp *mem) {
 	RzILTraceInstruction *instr_trace = rz_analysis_esil_get_instruction_trace(etrace, etrace->idx);
 	rz_analysis_il_trace_add_mem(instr_trace, mem);

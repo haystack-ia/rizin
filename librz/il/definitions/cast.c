@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2021 heersin <teablearcher@gmail.com>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "wrapper.h"
+#include <rz_il/definitions/cast.h>
+
 RzILBitVector val_cast_to_bitv(RzILVal val) {
 	RzILBitVector ret;
 	ret = val->data.bv;

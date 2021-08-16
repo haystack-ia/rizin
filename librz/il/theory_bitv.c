@@ -1,9 +1,8 @@
 // SPDX-FileCopyrightText: 2021 heersin <teablearcher@gmail.com>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "definitions/bitvector.h"
-#include "core_theory_opcodes.h"
-#include "core_theory_vm.h"
+#include <rz_il/rzil_opcodes.h>
+#include <rz_il/rzil_vm.h>
 
 void rz_il_handler_msb(RzILVM vm, RzILOp op) {
 	RzILOpMsb op_msb = op->op.msb;
@@ -132,7 +131,7 @@ void rz_il_handler_shiftl(RzILVM vm, RzILOp op) {
 
 	RzILBitVector bv = rz_il_get_bv_temp(vm, op_shiftl->x);
 	RzILBitVector shift = rz_il_get_bv_temp(vm, op_shiftl->y);
-	int shift_size = rz_il_bv_to_ut32(shift);
+	ut32 shift_size = rz_il_bv_to_ut32(shift);
 	RzILBool fill_bit = rz_il_get_bool_temp(vm, op_shiftl->fill_bit);
 
 	RzILBitVector result = rz_il_bv_dump(bv);
@@ -145,7 +144,7 @@ void rz_il_handler_shiftr(RzILVM vm, RzILOp op) {
 	RzILOpShiftr op_shr = op->op.shiftr;
 
 	RzILBitVector bv = rz_il_get_bv_temp(vm, op_shr->x);
-	int shift_size = rz_il_bv_to_ut32(rz_il_get_bv_temp(vm, op_shr->y));
+	ut32 shift_size = rz_il_bv_to_ut32(rz_il_get_bv_temp(vm, op_shr->y));
 	RzILBool fill_bit = rz_il_get_bool_temp(vm, op_shr->fill_bit);
 
 	RzILBitVector result = rz_il_bv_dump(bv);
@@ -157,7 +156,7 @@ void rz_il_handler_shiftr(RzILVM vm, RzILOp op) {
 void rz_il_handler_int(RzILVM vm, RzILOp op) {
 	RzILOpInt op_int = op->op.int_;
 
-	int length = op_int->length;
+	ut32 length = op_int->length;
 	int value = op_int->value;
 	RzILBitVector bv = rz_il_bv_new_from_ut32(length, value);
 

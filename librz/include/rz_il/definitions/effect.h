@@ -1,14 +1,13 @@
 // SPDX-FileCopyrightText: 2021 heersin <teablearcher@gmail.com>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#ifndef CORE_THEORY_VM_EFFECT_H
-#define CORE_THEORY_VM_EFFECT_H
+#ifndef RZ_IL_EFFECT_H
+#define RZ_IL_EFFECT_H
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <rz_util.h>
-#include <rz_types.h>
-#include "common.h"
+#include <rz_type.h>
 #include "bitvector.h"
 
 typedef enum {
@@ -37,55 +36,55 @@ typedef enum {
 	// maybe more
 } DATA_EFF_OPERATION;
 
-struct effect_label_t {
+struct rzil_effect_label_t {
 	char *label_id; ///< Label name
 	RzILBitVector addr; ///< RzILBitVector address if EFFECT_LABEL_ADDR
 		///< Function pointer if EFFECT_LABEL_SYSCALL / EFFECT_LABEL_HOOK
 	EFFECT_LABEL_TYPE type; ///< type of label
 };
 
-struct control_effect_t {
+struct rzil_control_effect_t {
 	RzILBitVector pc; ///< New Program Counter
 };
 
-struct data_effect_t {
+struct rzil_data_effect_t {
 	const char *var_name; ///< Name of variable, const one
 	int val_index; ///< index to the new value
 	DATA_EFF_OPERATION operation; ///< operation to value and variable
 };
 
-typedef struct control_effect_t *CtrlEffect;
-typedef struct data_effect_t *DataEffect;
-typedef struct effect_label_t *EffectLabel;
+typedef struct rzil_control_effect_t *RzILCtrlEffect;
+typedef struct rzil_data_effect_t *RzILDataEffect;
+typedef struct rzil_effect_label_t *RzILEffectLabel;
 
-typedef struct effect_union_t *Effect;
+typedef struct rzil_effect_union_t *RzILEffect;
 /**
- *  \struct effect_union_t
+ *  \struct rzil_effect_union_t
  *  \brief structure of data/control effect
  */
-struct effect_union_t {
+struct rzil_effect_union_t {
 	ut8 effect_type; ///< effect type
 	EFFECT_NOTATION notation; ///< Marks for carring additional info
-	Effect next_eff; ///< pointer to next effect, used in packed effect
+	RzILEffect next_eff; ///< pointer to next effect, used in packed effect
 	union {
-		CtrlEffect ctrl_eff; ///< pointer to ctrl effect
-		DataEffect data_eff; ///< pointer to data effect
+		RzILCtrlEffect ctrl_eff; ///< pointer to ctrl effect
+		RzILDataEffect data_eff; ///< pointer to data effect
 	};
 };
 
 // a chain of effects
 // should use something like rz_vector / rz_list
-Effect effect_new(EFFECT_TYPE type);
-DataEffect effect_new_data(void);
-CtrlEffect effect_new_ctrl(void);
-Effect wrap_ctrl_effect(CtrlEffect eff);
-Effect wrap_data_effect(DataEffect eff);
-EffectLabel effect_new_label(char *name, EFFECT_LABEL_TYPE type);
-void effect_free(Effect effect);
-void effect_free_ctrl(CtrlEffect eff);
-void effect_free_data(DataEffect eff);
-void print_effect(Effect effect);
-void print_ctrl_effect(CtrlEffect eff);
-void print_data_effect(DataEffect eff);
+RZ_API RzILEffect effect_new(EFFECT_TYPE type);
+RZ_API RzILDataEffect effect_new_data(void);
+RZ_API RzILCtrlEffect effect_new_ctrl(void);
+RZ_API RzILEffect wrap_ctrl_effect(RzILCtrlEffect eff);
+RZ_API RzILEffect wrap_data_effect(RzILDataEffect eff);
+RZ_API RzILEffectLabel effect_new_label(char *name, EFFECT_LABEL_TYPE type);
+RZ_API void effect_free(RzILEffect effect);
+RZ_API void effect_free_ctrl(RzILCtrlEffect eff);
+RZ_API void effect_free_data(RzILDataEffect eff);
+RZ_API void print_effect(RzILEffect effect);
+RZ_API void print_ctrl_effect(RzILCtrlEffect eff);
+RZ_API void print_data_effect(RzILDataEffect eff);
 
-#endif //CORE_THEORY_VM_EFFECT_H
+#endif // RZ_IL_EFFECT_H

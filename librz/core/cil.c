@@ -429,18 +429,6 @@ RZ_IPI void rz_core_analysis_esil_default(RzCore *core) {
 	rz_core_seek(core, at, true);
 }
 
-/**********
- * New Rizin IL Core (rzil) related things
- *********/
-RZ_IPI void rz_core_analysis_rzil_init_mem(RzCore *core) {
-	RzILVM vm;
-	printf("[Init RzilVM memory\n");
-	if (core->analysis->rzil && core->analysis->rzil->vm) {
-		vm = core->analysis->rzil->vm;
-		rz_il_vm_add_mem(vm, vm->data_size);
-	}
-}
-
 RZ_IPI void core_rzil_init(RzCore *core) {
 	rz_analysis_rzil_setup(core->analysis);
 }
@@ -459,7 +447,7 @@ RZ_IPI void rz_core_rzil_step(RzCore *core) {
 	RzPVector *oplist;
 
 	if (!core->analysis || !core->analysis->rzil) {
-		RZ_LOG_ERROR("Please aei to init RZIL First\n");
+		RZ_LOG_ERROR("Please aezi to init RZIL first\n");
 		return;
 	}
 

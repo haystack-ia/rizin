@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2021 heersin <teablearcher@gmail.com>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "vm_layer.h"
+#include <rz_il/vm_layer.h>
 
 static void free_label_kv(HtPPKv *kv) {
 	free(kv->key);
-	EffectLabel lbl = kv->value;
+	RzILEffectLabel lbl = kv->value;
 
 	if (lbl->type == EFFECT_LABEL_HOOK || lbl->type == EFFECT_LABEL_SYSCALL) {
 		lbl->addr = NULL;
@@ -39,7 +39,7 @@ RZ_API bool rz_il_vm_init(RzILVM vm, ut64 start_addr, int addr_size, int data_si
 	vm->vm_global_value_set = rz_il_new_bag(RZ_IL_VM_MAX_VAL, (RzILBagFreeFunc)rz_il_free_value);
 
 	// Key : string
-	// Val : EffectLabel
+	// Val : RzILEffectLabel
 	// Do not dump it since its single signed here, and will be free in `close`
 	HtPPOptions lbl_options = { 0 };
 	lbl_options.cmp = (HtPPListComparator)strcmp;
@@ -72,7 +72,7 @@ RZ_API bool rz_il_vm_init(RzILVM vm, ut64 start_addr, int addr_size, int data_si
 	//      1. Minimal unit size in memory
 	//      2. Multiple Memory
 	//      3. pc length
-	vm->mems = (Mem *)calloc(RZ_IL_VM_MAX_TEMP, sizeof(Mem));
+	vm->mems = (RzILMem *)calloc(RZ_IL_VM_MAX_TEMP, sizeof(RzILMem));
 	vm->pc = rz_il_bv_new_from_ut64(addr_size, start_addr);
 
 	// Table for storing the core theory opcodes
@@ -208,7 +208,7 @@ RZ_API void rz_il_vm_list_step(RzILVM vm, RzPVector *op_list) {
 		//		rz_il_print_vm_temps(vm);
 	}
 
-	RzILBitVector one = rz_il_bv_new(vm->pc->len);
+	RzILBitVector one = rz_il_bv_new0(vm->pc->len);
 	rz_il_bv_set(one, vm->pc->len - 1, true);
 	RzILBitVector next_pc = rz_il_bv_add(vm->pc, one);
 	rz_il_bv_free(vm->pc);
@@ -250,8 +250,8 @@ RZ_API void rz_il_free_bv_addr(RzILBitVector addr) {
  * \param min_unit_size int, size of minimal unit of the vm
  * \return Mem memory, return a pointer to the newly created memory
  */
-RZ_API Mem rz_il_vm_add_mem(RzILVM vm, int min_unit_size) {
-	Mem mem = rz_il_new_mem(min_unit_size);
+RZ_API RzILMem rz_il_vm_add_mem(RzILVM vm, int min_unit_size) {
+	RzILMem mem = rz_il_new_mem(min_unit_size);
 	vm->mems[vm->mem_count] = mem;
 	vm->mem_count += 1;
 	return mem;
@@ -449,7 +449,7 @@ void rz_il_vm_list_printer_step(RzPVector *op_list) {
  * \return val Bitvector, data at the address, has `vm->min_unit_size` length
  */
 RZ_API RzILBitVector rz_il_vm_mem_load(RzILVM vm, int mem_index, RzILBitVector key) {
-	Mem m;
+	RzILMem m;
 
 	if (vm && vm->mems) {
 		if (mem_index >= vm->mem_count || mem_index < 0) {
@@ -471,8 +471,8 @@ RZ_API RzILBitVector rz_il_vm_mem_load(RzILVM vm, int mem_index, RzILBitVector k
  * \return val Bitvector, data at the address, must have `vm->min_unit_size` length
  * \return mem Mem, the memory you store data to
  */
-RZ_API Mem rz_il_vm_mem_store(RzILVM vm, int mem_index, RzILBitVector key, RzILBitVector value) {
-	Mem m;
+RZ_API RzILMem rz_il_vm_mem_store(RzILVM vm, int mem_index, RzILBitVector key, RzILBitVector value) {
+	RzILMem m;
 
 	if (vm && vm->mems) {
 		if (mem_index >= vm->mem_count || mem_index < 0) {

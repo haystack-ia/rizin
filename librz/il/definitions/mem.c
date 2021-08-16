@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: 2021 heersin <teablearcher@gmail.com>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "mem.h"
+#include <rz_il/definitions/mem.h>
 
 static void free_bv_key_value(HtPPKv *kv) {
 	rz_il_bv_free(kv->value);
 	rz_il_bv_free(kv->key);
 }
 
-Mem rz_il_new_mem(int min_unit_size) {
-	Mem ret = (Mem)RZ_NEW0(struct mem_t);
+RZ_API RzILMem rz_il_new_mem(int min_unit_size) {
+	RzILMem ret = (RzILMem)RZ_NEW0(struct rzil_mem_t);
 
 	HtPPOptions options = { 0 };
 	options.cmp = (HtPPListComparator)rz_il_bv_cmp;
@@ -26,7 +26,7 @@ Mem rz_il_new_mem(int min_unit_size) {
 	return ret;
 }
 
-void rz_il_free_mem(Mem mem) {
+RZ_API void rz_il_free_mem(RzILMem mem) {
 	if (!mem) {
 		return;
 	}
@@ -35,7 +35,7 @@ void rz_il_free_mem(Mem mem) {
 	free(mem);
 }
 
-Mem rz_il_mem_store(Mem mem, RzILBitVector key, RzILBitVector value) {
+RZ_API RzILMem rz_il_mem_store(RzILMem mem, RzILBitVector key, RzILBitVector value) {
 	if (value->len != mem->min_unit_size) {
 		printf("[Type Not Matched]\n");
 		return NULL;
@@ -44,7 +44,7 @@ Mem rz_il_mem_store(Mem mem, RzILBitVector key, RzILBitVector value) {
 	return mem;
 }
 
-RzILBitVector rz_il_mem_load(Mem mem, RzILBitVector key) {
+RZ_API RzILBitVector rz_il_mem_load(RzILMem mem, RzILBitVector key) {
 	RzILBitVector val = ht_pp_find(mem->kv_map, key, NULL);
 	RzILBitVector ret = rz_il_bv_dump(val);
 	return ret;
