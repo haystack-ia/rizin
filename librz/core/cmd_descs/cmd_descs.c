@@ -2845,7 +2845,7 @@ static const RzCmdDescArg cmd_info_guess_size_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_guess_size_help = {
-	.summary = "Show info of current file",
+	.summary = "Guess size of binary program",
 	.args = cmd_info_guess_size_args,
 };
 
@@ -5972,9 +5972,8 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	rz_warn_if_fail(cmd_info_strings_cd);
 	rz_cmd_desc_set_default_mode(cmd_info_strings_cd, RZ_OUTPUT_MODE_TABLE);
 
-	RzCmdDesc *cmd_info_guess_size_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iZ", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_guess_size_help);
+	RzCmdDesc *cmd_info_guess_size_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iZ", RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_RIZIN, rz_cmd_info_guess_size_handler, &cmd_info_guess_size_help);
 	rz_warn_if_fail(cmd_info_guess_size_cd);
-	rz_cmd_desc_set_default_mode(cmd_info_guess_size_cd, RZ_OUTPUT_MODE_TABLE);
 
 	RzCmdDesc *cmd_kuery_cd = rz_cmd_desc_oldinput_new(core->rcmd, root_cd, "k", rz_cmd_kuery, &cmd_kuery_help);
 	rz_warn_if_fail(cmd_kuery_cd);

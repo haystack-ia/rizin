@@ -1571,3 +1571,24 @@ RZ_IPI RzCmdStatus rz_cmd_info_source_handler(RzCore *core, int argc, const char
 	print_source_info(core, PRINT_SOURCE_INFO_FILES, state->mode);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_guess_size_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	ut64 size = rz_bin_get_size(core->bin);
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_JSON:
+		pj_o(state->d.pj);
+		pj_kn(state->d.pj, "size", size);
+		pj_end(state->d.pj);
+		break;
+	case RZ_OUTPUT_MODE_RIZIN:
+		rz_cons_printf("f bin_size @ %" PFMT64u "\n", size);
+		break;
+	case RZ_OUTPUT_MODE_STANDARD:
+		rz_cons_printf("%" PFMT64u "\n", size);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+	return RZ_CMD_STATUS_OK;
+}
