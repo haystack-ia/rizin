@@ -451,6 +451,51 @@ static bool print_source_info(RzCore *core, PrintSourceInfoType type, RzOutputMo
 	return true;
 }
 
+RZ_IPI int rz_cmd_info_kuery(void *data, const char *input) {
+	RzCore *core = (RzCore *)data;
+	RzBinObject *o = rz_bin_cur_object(core->bin);
+	Sdb *db = o ? o->kv : NULL;
+	switch (input[0]) {
+	case 'v':
+		if (db) {
+			char *o = sdb_querys(db, NULL, 0, input + 2);
+			if (o && *o) {
+				rz_cons_print(o);
+			}
+			free(o);
+		}
+		break;
+	case '*':
+		rz_core_bin_export_info(core, RZ_MODE_RIZINCMD);
+		break;
+	case '.':
+	case ' ':
+		if (db) {
+			char *o = sdb_querys(db, NULL, 0, input + 1);
+			if (o && *o) {
+				rz_cons_print(o);
+			}
+			free(o);
+		}
+		break;
+	case '\0':
+		if (db) {
+			char *o = sdb_querys(db, NULL, 0, "*");
+			if (o && *o) {
+				rz_cons_print(o);
+			}
+			free(o);
+		}
+		break;
+	case '?':
+	default:
+		eprintf("Usage: ik [sdb-query]\n");
+		eprintf("Usage: ik*    # load all header information\n");
+		return 1;
+	}
+	return 0;
+}
+
 RZ_IPI int rz_cmd_info(void *data, const char *input) {
 	RzCore *core = (RzCore *)data;
 	bool newline = rz_cons_is_interactive();
@@ -462,7 +507,6 @@ RZ_IPI int rz_cmd_info(void *data, const char *input) {
 	int is_array = 0;
 	bool is_izzzj = false;
 	bool is_idpij = false;
-	Sdb *db;
 	PJ *pj = NULL;
 
 	for (i = 0; input[i] && input[i] != ' '; i++)
@@ -547,49 +591,8 @@ RZ_IPI int rz_cmd_info(void *data, const char *input) {
 			newline = false;
 		} break;
 		case 'k': // "ik"
-		{
-			RzBinObject *o = rz_bin_cur_object(core->bin);
-			db = o ? o->kv : NULL;
-			//:eprintf ("db = %p\n", db);
-			switch (input[1]) {
-			case 'v':
-				if (db) {
-					char *o = sdb_querys(db, NULL, 0, input + 3);
-					if (o && *o) {
-						rz_cons_print(o);
-					}
-					free(o);
-				}
-				break;
-			case '*':
-				rz_core_bin_export_info(core, RZ_MODE_RIZINCMD);
-				break;
-			case '.':
-			case ' ':
-				if (db) {
-					char *o = sdb_querys(db, NULL, 0, input + 2);
-					if (o && *o) {
-						rz_cons_print(o);
-					}
-					free(o);
-				}
-				break;
-			case '\0':
-				if (db) {
-					char *o = sdb_querys(db, NULL, 0, "*");
-					if (o && *o) {
-						rz_cons_print(o);
-					}
-					free(o);
-				}
-				break;
-			case '?':
-			default:
-				eprintf("Usage: ik [sdb-query]\n");
-				eprintf("Usage: ik*    # load all header information\n");
-			}
-			goto done;
-		} break;
+			rz_cmd_info_kuery(core, input + 1);
+			break;
 		case 'o': // "io"
 		{
 			if (!desc) {
