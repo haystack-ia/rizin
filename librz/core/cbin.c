@@ -2113,7 +2113,7 @@ static bool isAnExport(RzBinSymbol *s) {
 	return (s->bind && !strcmp(s->bind, RZ_BIN_BIND_GLOBAL_STR));
 }
 
-static void symbols_print(RzCore *core, RzCmdStateOutput *state, bool only_export) {
+static void symbols_print(RzCore *core, RzCmdStateOutput *state, bool only_export, bool onlyHere) {
 	RzBinFile *bf = rz_bin_cur(core->bin);
 	RzBinObject *o = bf ? bf->o : NULL;
 	if (!o) {
@@ -2138,6 +2138,13 @@ static void symbols_print(RzCore *core, RzCmdStateOutput *state, bool only_expor
 			continue;
 		}
 		ut64 addr = rva(o, symbol->paddr, symbol->vaddr, va);
+
+		if (onlyHere) {
+			if (!is_in_range(core->offset, symbol->paddr, symbol->size) && !is_in_range(core->offset, addr, symbol->size)) {
+				continue;
+			}
+		}
+
 		SymName sn = { 0 };
 		sym_name_init(core, &sn, symbol, lang);
 		char *rz_symbol_name = rz_str_escape_utf8(sn.name, false, true);
@@ -2188,11 +2195,15 @@ static void symbols_print(RzCore *core, RzCmdStateOutput *state, bool only_expor
 }
 
 RZ_IPI void rz_core_bin_symbols_print(RzCore *core, RzCmdStateOutput *state) {
-	symbols_print(core, state, false);
+	symbols_print(core, state, false, false);
+}
+
+RZ_IPI void rz_core_bin_cur_symbol_print(RzCore *core, RzCmdStateOutput *state) {
+	symbols_print(core, state, false, true);
 }
 
 RZ_IPI void rz_core_bin_exports_print(RzCore *core, RzCmdStateOutput *state) {
-	symbols_print(core, state, true);
+	symbols_print(core, state, true, false);
 }
 
 RZ_IPI void rz_core_bin_imports_print(RzCore *core, RzCmdStateOutput *state) {

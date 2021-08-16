@@ -1267,6 +1267,11 @@ RZ_IPI RzCmdStatus rz_cmd_info_symbols_handler(RzCore *core, int argc, const cha
 	return RZ_CMD_STATUS_OK;
 }
 
+RZ_IPI RzCmdStatus rz_cmd_info_cur_symbol_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_cur_symbol_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
+
 RZ_IPI RzCmdStatus rz_cmd_info_imports_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
 	rz_core_bin_imports_print(core, state);
 	return RZ_CMD_STATUS_OK;
