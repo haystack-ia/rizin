@@ -2813,8 +2813,24 @@ static const RzCmdDescArg cmd_info_sourcelines_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_sourcelines_help = {
-	.summary = "Show info of current file",
+	.summary = "Display source file line info",
 	.args = cmd_info_sourcelines_args,
+};
+
+static const RzCmdDescArg cmd_info_sourcelines_here_args[] = {
+	{ 0 },
+};
+static const RzCmdDescHelp cmd_info_sourcelines_here_help = {
+	.summary = "Display source file line info at current address",
+	.args = cmd_info_sourcelines_here_args,
+};
+
+static const RzCmdDescArg cmd_info_source_args[] = {
+	{ 0 },
+};
+static const RzCmdDescHelp cmd_info_source_help = {
+	.summary = "Display source file info",
+	.args = cmd_info_source_args,
 };
 
 static const RzCmdDescArg cmd_info_strings_args[] = {
@@ -5943,9 +5959,14 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	rz_warn_if_fail(cmd_info_trycatch_cd);
 	rz_cmd_desc_set_default_mode(cmd_info_trycatch_cd, RZ_OUTPUT_MODE_RIZIN);
 
-	RzCmdDesc *cmd_info_sourcelines_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "ix", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_sourcelines_help);
+	RzCmdDesc *cmd_info_sourcelines_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "ix", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_JSON, rz_cmd_info_sourcelines_handler, &cmd_info_sourcelines_help);
 	rz_warn_if_fail(cmd_info_sourcelines_cd);
-	rz_cmd_desc_set_default_mode(cmd_info_sourcelines_cd, RZ_OUTPUT_MODE_TABLE);
+
+	RzCmdDesc *cmd_info_sourcelines_here_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "ix.", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_JSON, rz_cmd_info_sourcelines_here_handler, &cmd_info_sourcelines_here_help);
+	rz_warn_if_fail(cmd_info_sourcelines_here_cd);
+
+	RzCmdDesc *cmd_info_source_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "ixf", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_JSON, rz_cmd_info_source_handler, &cmd_info_source_help);
+	rz_warn_if_fail(cmd_info_source_cd);
 
 	RzCmdDesc *cmd_info_strings_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iz", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_strings_handler, &cmd_info_strings_help);
 	rz_warn_if_fail(cmd_info_strings_cd);

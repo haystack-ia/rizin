@@ -334,15 +334,28 @@ commands:
       - RZ_OUTPUT_MODE_RIZIN
     args: []
   - name: ix
-    handler: cmd_info
     cname: cmd_info_sourcelines
-    summary: Show info of current file
+    summary: Display source file line info
     type: RZ_CMD_DESC_TYPE_ARGV_STATE
-    default_mode: RZ_OUTPUT_MODE_TABLE
     modes:
-      - RZ_OUTPUT_MODE_TABLE
+      - RZ_OUTPUT_MODE_STANDARD
       - RZ_OUTPUT_MODE_JSON
-      - RZ_OUTPUT_MODE_QUIET
+    args: []
+  - name: ix.
+    cname: cmd_info_sourcelines_here
+    summary: Display source file line info at current address
+    type: RZ_CMD_DESC_TYPE_ARGV_STATE
+    modes:
+      - RZ_OUTPUT_MODE_STANDARD
+      - RZ_OUTPUT_MODE_JSON
+    args: []
+  - name: ixf
+    cname: cmd_info_source
+    summary: Display source file info
+    type: RZ_CMD_DESC_TYPE_ARGV_STATE
+    modes:
+      - RZ_OUTPUT_MODE_STANDARD
+      - RZ_OUTPUT_MODE_JSON
     args: []
   - name: iz
     cname: cmd_info_strings

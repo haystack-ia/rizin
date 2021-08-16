@@ -1556,3 +1556,18 @@ RZ_IPI RzCmdStatus rz_cmd_info_trycatch_handler(RzCore *core, int argc, const ch
 	rz_core_bin_trycatch_print(core, state);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RzCmdStatus rz_cmd_info_sourcelines_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	print_source_info(core, PRINT_SOURCE_INFO_LINES_ALL, state->mode);
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_sourcelines_here_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	print_source_info(core, PRINT_SOURCE_INFO_LINES_HERE, state->mode);
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_source_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	print_source_info(core, PRINT_SOURCE_INFO_FILES, state->mode);
+	return RZ_CMD_STATUS_OK;
+}
