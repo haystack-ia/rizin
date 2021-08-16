@@ -2805,7 +2805,7 @@ static const RzCmdDescArg cmd_info_trycatch_args[] = {
 	{ 0 },
 };
 static const RzCmdDescHelp cmd_info_trycatch_help = {
-	.summary = "Show info of current file",
+	.summary = "Show try/catch blocks",
 	.args = cmd_info_trycatch_args,
 };
 
@@ -5939,9 +5939,9 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	RzCmdDesc *cmd_info_versions_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iV", RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_JSON, rz_cmd_info_versions_handler, &cmd_info_versions_help);
 	rz_warn_if_fail(cmd_info_versions_cd);
 
-	RzCmdDesc *cmd_info_trycatch_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iw", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_trycatch_help);
+	RzCmdDesc *cmd_info_trycatch_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iw", RZ_OUTPUT_MODE_RIZIN, rz_cmd_info_trycatch_handler, &cmd_info_trycatch_help);
 	rz_warn_if_fail(cmd_info_trycatch_cd);
-	rz_cmd_desc_set_default_mode(cmd_info_trycatch_cd, RZ_OUTPUT_MODE_TABLE);
+	rz_cmd_desc_set_default_mode(cmd_info_trycatch_cd, RZ_OUTPUT_MODE_RIZIN);
 
 	RzCmdDesc *cmd_info_sourcelines_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "ix", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_handler, &cmd_info_sourcelines_help);
 	rz_warn_if_fail(cmd_info_sourcelines_cd);

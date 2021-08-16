@@ -6177,6 +6177,18 @@ RZ_IPI void rz_core_bin_versions_print(RzCore *core, RzCmdStateOutput *state) {
 	}
 }
 
+RZ_IPI void rz_core_bin_trycatch_print(RzCore *core, RzCmdStateOutput *state) {
+	// TODO: add rz_bin_object_get_trycatch and switch to table + json output
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_RIZIN:
+		bin_trycatch(core, NULL, RZ_MODE_PRINT);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+}
+
 static void print_arch(RzBin *bin, RzCmdStateOutput *state, int num, ut64 offset, ut64 size,
 	const char *arch, int bits, const char *machine, const char *flag, RzBinInfo *info) {
 
