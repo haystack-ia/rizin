@@ -1386,6 +1386,47 @@ RZ_IPI RzCmdStatus rz_cmd_info_strings_handler(RzCore *core, int argc, const cha
 	return RZ_CMD_STATUS_OK;
 }
 
+RZ_IPI RzCmdStatus rz_cmd_info_whole_strings_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	rz_core_bin_whole_strings_print(core, state);
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_dump_strings_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	if (!bf) {
+		return RZ_CMD_STATUS_ERROR;
+	}
+	int min = rz_config_get_i(core->config, "bin.minstr");
+	int strmode = bf->strmode;
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_JSON:
+		bf->strmode = RZ_MODE_JSON;
+		break;
+	case RZ_OUTPUT_MODE_TABLE:
+		bf->strmode = RZ_MODE_PRINT;
+		break;
+	case RZ_OUTPUT_MODE_QUIET:
+		bf->strmode = RZ_MODE_SIMPLE;
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+	rz_bin_dump_strings(bf, min, 2);
+	bf->strmode = strmode;
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_info_purge_string_handler(RzCore *core, int argc, const char **argv) {
+	bool old_tmpseek = core->tmpseek;
+	core->tmpseek = false;
+	char *strpurge = core->bin->strpurge;
+	rz_core_cmdf(core, "e bin.str.purge=%s%s0x%" PFMT64x, strpurge ? strpurge : "",
+		strpurge && *strpurge ? "," : "", core->offset);
+	core->tmpseek = old_tmpseek;
+	return RZ_CMD_STATUS_OK;
+}
+
 RZ_IPI RzCmdStatus rz_cmd_info_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
 	if (!core->file) {
 		return RZ_CMD_STATUS_ERROR;

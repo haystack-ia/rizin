@@ -2696,16 +2696,11 @@ RZ_IPI void rz_core_bin_segments_print(RzCore *core, RzCmdStateOutput *state, Rz
 	rz_cmd_state_output_array_end(state);
 }
 
-RZ_IPI void rz_core_bin_strings_print(RzCore *core, RzCmdStateOutput *state) {
+static void strings_print(RzCore *core, RzCmdStateOutput *state, const RzList *list) {
 	bool b64str = rz_config_get_i(core->config, "bin.b64str");
 	int va = (core->io->va || core->bin->is_debugger) ? VA_TRUE : VA_FALSE;
-	RzBin *bin = core->bin;
-	RzBinObject *obj = rz_bin_cur_object(bin);
-	if (!obj) {
-		return;
-	}
+	RzBinObject *obj = rz_bin_cur_object(core->bin);
 
-	const RzList *list = rz_bin_object_get_strings(obj);
 	RzListIter *iter;
 	RzBinString *string;
 	RzBinSection *section;
@@ -2719,7 +2714,7 @@ RZ_IPI void rz_core_bin_strings_print(RzCore *core, RzCmdStateOutput *state) {
 		ut64 paddr, vaddr;
 		paddr = string->paddr;
 		vaddr = obj ? rva(obj, paddr, string->vaddr, va) : paddr;
-		if (!rz_bin_string_filter(bin, string->string, string->length, vaddr)) {
+		if (!rz_bin_string_filter(core->bin, string->string, string->length, vaddr)) {
 			continue;
 		}
 
@@ -2848,6 +2843,66 @@ RZ_IPI void rz_core_bin_strings_print(RzCore *core, RzCmdStateOutput *state) {
 	}
 	RZ_FREE(b64.string);
 	rz_cmd_state_output_array_end(state);
+}
+
+RZ_IPI void rz_core_bin_strings_print(RzCore *core, RzCmdStateOutput *state) {
+	RzBin *bin = core->bin;
+	RzBinObject *obj = rz_bin_cur_object(bin);
+	if (!obj) {
+		return;
+	}
+	const RzList *list = rz_bin_object_get_strings(obj);
+	strings_print(core, state, list);
+}
+
+RZ_IPI void rz_core_bin_whole_strings_print(RzCore *core, RzCmdStateOutput *state) {
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	bool new_bf = false;
+	if (bf && strstr(bf->file, "malloc://")) {
+		//sync bf->buf to search string on it
+		ut8 *tmp = RZ_NEWS(ut8, bf->size);
+		if (!tmp) {
+			return;
+		}
+		rz_io_read_at(core->io, 0, tmp, bf->size);
+		rz_buf_write_at(bf->buf, 0, tmp, bf->size);
+	}
+	if (!core->file) {
+		RZ_LOG_ERROR("Core file not open\n");
+		return;
+	}
+	if (!bf) {
+		// TODO: manually creating an RzBinFile like this is a hack and abuse of RzBin API
+		// If we don't want to use an RzBinFile for searching strings, the raw strings search
+		// should be refactored out of bin.
+		bf = RZ_NEW0(RzBinFile);
+		if (!bf) {
+			return;
+		}
+		RzIODesc *desc = rz_io_desc_get(core->io, core->file->fd);
+		if (!desc) {
+			free(bf);
+			return;
+		}
+		bf->file = strdup(desc->name);
+		bf->size = rz_io_desc_size(desc);
+		if (bf->size == UT64_MAX) {
+			free(bf);
+			return;
+		}
+		bf->buf = rz_buf_new_with_io(&core->bin->iob, core->file->fd);
+		bf->o = NULL;
+		bf->rbin = core->bin;
+		new_bf = true;
+	}
+	RzList *l = rz_bin_raw_strings(bf, 0);
+	strings_print(core, state, l);
+	rz_list_free(l);
+	if (new_bf) {
+		rz_buf_free(bf->buf);
+		free(bf->file);
+		free(bf);
+	}
 }
 
 static const char *get_filename(RzBinInfo *info, RzIODesc *desc) {

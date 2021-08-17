@@ -112,6 +112,7 @@ RZ_IPI void rz_core_bin_sections_print(RzCore *core, RzCmdStateOutput *state, Rz
 RZ_IPI void rz_core_bin_cur_section_print(RzCore *core, RzCmdStateOutput *state, RzList *hashes);
 RZ_IPI void rz_core_bin_segments_print(RzCore *core, RzCmdStateOutput *state, RzList *hashes);
 RZ_IPI void rz_core_bin_strings_print(RzCore *core, RzCmdStateOutput *state);
+RZ_IPI void rz_core_bin_whole_strings_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_file_info_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_bin_info_print(RzCore *core, RzCmdStateOutput *state);
 RZ_IPI void rz_core_bin_classes_print(RzCore *core, RzCmdStateOutput *state);

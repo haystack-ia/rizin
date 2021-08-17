@@ -2849,6 +2849,30 @@ static const RzCmdDescHelp cmd_info_strings_help = {
 	.args = cmd_info_strings_args,
 };
 
+static const RzCmdDescArg cmd_info_whole_strings_args[] = {
+	{ 0 },
+};
+static const RzCmdDescHelp cmd_info_whole_strings_help = {
+	.summary = "List strings in the whole binary",
+	.args = cmd_info_whole_strings_args,
+};
+
+static const RzCmdDescArg cmd_info_dump_strings_args[] = {
+	{ 0 },
+};
+static const RzCmdDescHelp cmd_info_dump_strings_help = {
+	.summary = "Dump Strings from whole binary to rizin shell (for huge files)",
+	.args = cmd_info_dump_strings_args,
+};
+
+static const RzCmdDescArg cmd_info_purge_string_args[] = {
+	{ 0 },
+};
+static const RzCmdDescHelp cmd_info_purge_string_help = {
+	.summary = "Purge string at current address via bin.str.purge",
+	.args = cmd_info_purge_string_args,
+};
+
 static const RzCmdDescArg cmd_info_guess_size_args[] = {
 	{ 0 },
 };
@@ -5977,6 +6001,17 @@ RZ_IPI void rzshell_cmddescs_init(RzCore *core) {
 	RzCmdDesc *cmd_info_strings_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iz", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_strings_handler, &cmd_info_strings_help);
 	rz_warn_if_fail(cmd_info_strings_cd);
 	rz_cmd_desc_set_default_mode(cmd_info_strings_cd, RZ_OUTPUT_MODE_TABLE);
+
+	RzCmdDesc *cmd_info_whole_strings_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "izz", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_whole_strings_handler, &cmd_info_whole_strings_help);
+	rz_warn_if_fail(cmd_info_whole_strings_cd);
+	rz_cmd_desc_set_default_mode(cmd_info_whole_strings_cd, RZ_OUTPUT_MODE_TABLE);
+
+	RzCmdDesc *cmd_info_dump_strings_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "izzz", RZ_OUTPUT_MODE_TABLE | RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_QUIET, rz_cmd_info_dump_strings_handler, &cmd_info_dump_strings_help);
+	rz_warn_if_fail(cmd_info_dump_strings_cd);
+	rz_cmd_desc_set_default_mode(cmd_info_dump_strings_cd, RZ_OUTPUT_MODE_TABLE);
+
+	RzCmdDesc *cmd_info_purge_string_cd = rz_cmd_desc_argv_new(core->rcmd, i_cd, "iz-", rz_cmd_info_purge_string_handler, &cmd_info_purge_string_help);
+	rz_warn_if_fail(cmd_info_purge_string_cd);
 
 	RzCmdDesc *cmd_info_guess_size_cd = rz_cmd_desc_argv_state_new(core->rcmd, i_cd, "iZ", RZ_OUTPUT_MODE_JSON | RZ_OUTPUT_MODE_STANDARD | RZ_OUTPUT_MODE_RIZIN, rz_cmd_info_guess_size_handler, &cmd_info_guess_size_help);
 	rz_warn_if_fail(cmd_info_guess_size_cd);
