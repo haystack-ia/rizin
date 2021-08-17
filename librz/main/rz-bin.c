@@ -1108,10 +1108,10 @@ RZ_API int rz_main_rz_bin(int argc, const char **argv) {
 	// List fatmach0 sub-binaries, etc
 	if (action & RZ_BIN_REQ_LISTARCHS || ((arch || bits || arch_name) && !rz_bin_select(bin, arch, bits, arch_name))) {
 		if (rad == RZ_MODE_SIMPLEST || rad == RZ_MODE_SIMPLE) {
-			RzCmdStateOutput state = {.mode = RZ_OUTPUT_MODE_QUIET};
+			RzCmdStateOutput state = { .mode = RZ_OUTPUT_MODE_QUIET };
 			rz_core_bin_archs_print(bin, &state);
 		} else if (rad == RZ_MODE_JSON) {
-			RzCmdStateOutput state = {.mode = RZ_OUTPUT_MODE_JSON, .d.pj = pj_new()};
+			RzCmdStateOutput state = { .mode = RZ_OUTPUT_MODE_JSON, .d.pj = pj_new() };
 			if (!state.d.pj) {
 				rz_core_file_close(fh);
 				rz_core_fini(&core);
@@ -1121,7 +1121,7 @@ RZ_API int rz_main_rz_bin(int argc, const char **argv) {
 			rz_cons_printf("%s\n", pj_string(state.d.pj));
 			pj_free(state.d.pj);
 		} else {
-			RzCmdStateOutput state = {.mode = RZ_OUTPUT_MODE_TABLE, .d.t = rz_table_new()};
+			RzCmdStateOutput state = { .mode = RZ_OUTPUT_MODE_TABLE, .d.t = rz_table_new() };
 			if (!state.d.t) {
 				rz_core_file_close(fh);
 				rz_core_fini(&core);

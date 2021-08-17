@@ -582,7 +582,7 @@ static void get_minmax_argc(RzCmdDesc *cd, int *min_argc, int *max_argc) {
 }
 
 static RzOutputMode get_cd_default_mode(RzCmdDesc *cd) {
-	switch(cd->type) {
+	switch (cd->type) {
 	case RZ_CMD_DESC_TYPE_ARGV_MODES:
 		return cd->d.argv_modes_data.default_mode;
 	case RZ_CMD_DESC_TYPE_ARGV_STATE:

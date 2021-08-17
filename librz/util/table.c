@@ -106,7 +106,7 @@ static bool column_exists(RzTable *t, const char *name) {
 	RzListIter *it;
 	RzTableColumn *c;
 
-	rz_list_foreach(t->cols, it, c) {
+	rz_list_foreach (t->cols, it, c) {
 		if (!strcmp(c->name, name)) {
 			return true;
 		}
@@ -211,7 +211,8 @@ RZ_API void rz_table_set_columnsf(RzTable *t, const char *fmt, ...) {
 	va_end(ap);
 }
 
-#define add_column_to_rowf(row, fmt, ap) do { \
+#define add_column_to_rowf(row, fmt, ap) \
+	do { \
 		const char *arg = NULL; \
 		switch (fmt) { \
 		case 's': \
@@ -253,7 +254,7 @@ RZ_API void rz_table_set_columnsf(RzTable *t, const char *fmt, ...) {
 			eprintf("Invalid format string char '%c', use 's' or 'n'\n", fmt); \
 			break; \
 		} \
-	} while(0)
+	} while (0)
 
 /**
  * Add some columns values to the last created row, if any, or create a new row otherwise.

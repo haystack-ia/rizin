@@ -2068,7 +2068,7 @@ static void entries_initfini_print(RzCore *core, RzCmdStateOutput *state, bool i
 		if (!type) {
 			type = "unknown";
 		}
-		switch(state->mode) {
+		switch (state->mode) {
 		case RZ_OUTPUT_MODE_QUIET:
 			rz_cons_printf("0x%08" PFMT64x "\n", at);
 			break;
@@ -2149,7 +2149,7 @@ static void symbols_print(RzCore *core, RzCmdStateOutput *state, bool only_expor
 		sym_name_init(core, &sn, symbol, lang);
 		char *rz_symbol_name = rz_str_escape_utf8(sn.name, false, true);
 
-		switch(state->mode) {
+		switch (state->mode) {
 		case RZ_OUTPUT_MODE_QUIET:
 			rz_cons_printf("0x%08" PFMT64x " %d %s%s%s\n",
 				addr, (int)symbol->size,
@@ -2245,7 +2245,7 @@ RZ_IPI void rz_core_bin_imports_print(RzCore *core, RzCmdStateOutput *state) {
 			free(symname);
 			symname = prname;
 		}
-		switch(state->mode) {
+		switch (state->mode) {
 		case RZ_OUTPUT_MODE_QUIET:
 			rz_cons_printf("%s%s%s\n", libname ? libname : "", libname ? " " : "", symname);
 			break;
@@ -2305,7 +2305,7 @@ RZ_IPI void rz_core_bin_libs_print(RzCore *core, RzCmdStateOutput *state) {
 	rz_cmd_state_output_array_start(state);
 	rz_cmd_state_output_set_columnsf(state, "s", "library");
 	rz_list_foreach (libs, iter, lib) {
-		switch(state->mode) {
+		switch (state->mode) {
 		case RZ_OUTPUT_MODE_JSON:
 			pj_s(state->d.pj, lib);
 			break;
@@ -2336,7 +2336,7 @@ RZ_IPI void rz_core_bin_main_print(RzCore *core, RzCmdStateOutput *state) {
 	ut64 addr = va ? rz_bin_object_addr_with_base(o, binmain->vaddr) : binmain->paddr;
 	rz_cmd_state_output_set_columnsf(state, "XX", "vaddr", "paddr");
 
-	switch(state->mode) {
+	switch (state->mode) {
 	case RZ_OUTPUT_MODE_QUIET:
 		rz_cons_printf("%" PFMT64d, addr);
 		break;
@@ -2385,7 +2385,7 @@ RZ_IPI void rz_core_bin_relocs_print(RzCore *core, RzCmdStateOutput *state) {
 		RzBinReloc *reloc = relocs->relocs[i];
 		ut64 addr = rva(o, reloc->paddr, reloc->vaddr, va);
 
-		switch(state->mode) {
+		switch (state->mode) {
 		case RZ_OUTPUT_MODE_QUIET:
 			rz_cons_printf("0x%08" PFMT64x "  %s\n", addr, reloc->import ? reloc->import->name : "");
 			break;
@@ -2594,7 +2594,7 @@ static void sections_headers_setup(RzCore *core, RzCmdStateOutput *state, RzList
 
 	rz_cmd_state_output_set_columnsf(state, "XxXxssssx", "paddr", "size", "vaddr", "vsize", "perm", "name", "type", "flags", "align");
 
-	rz_list_foreach(hashes, iter, hashname) {
+	rz_list_foreach (hashes, iter, hashname) {
 		const RzMsgDigestPlugin *msg_plugin = rz_msg_digest_plugin_by_name(hashname);
 		if (msg_plugin) {
 			rz_cmd_state_output_set_columnsf(state, "s", msg_plugin->name);
@@ -2617,7 +2617,7 @@ RZ_IPI void rz_core_bin_sections_print(RzCore *core, RzCmdStateOutput *state, Rz
 	sections_headers_setup(core, state, hashes);
 
 	rz_list_foreach (sections, iter, section) {
-		switch(state->mode) {
+		switch (state->mode) {
 		case RZ_OUTPUT_MODE_JSON:
 			sections_print_json(core, state->d.pj, o, section, hashes);
 			break;
@@ -2644,7 +2644,7 @@ RZ_IPI void rz_core_bin_cur_section_print(RzCore *core, RzCmdStateOutput *state,
 	RzBinSection *section = rz_bin_get_section_at(o, core->offset, va);
 	sections_headers_setup(core, state, hashes);
 
-	switch(state->mode) {
+	switch (state->mode) {
 	case RZ_OUTPUT_MODE_JSON:
 		sections_print_json(core, state->d.pj, o, section, hashes);
 		break;
@@ -2680,7 +2680,7 @@ RZ_IPI void rz_core_bin_segments_print(RzCore *core, RzCmdStateOutput *state, Rz
 	}
 
 	rz_list_foreach (segments, iter, segment) {
-		switch(state->mode) {
+		switch (state->mode) {
 		case RZ_OUTPUT_MODE_JSON:
 			sections_print_json(core, state->d.pj, o, segment, hashes);
 			break;
@@ -6227,7 +6227,6 @@ static void bin_memory_print_rec(RzCmdStateOutput *state, RzBinMem *mirror, cons
 			bin_memory_print_rec(state, mem, mem->mirrors, mem->perms & perms);
 		}
 	}
-
 }
 
 RZ_IPI void rz_core_bin_memory_print(RzCore *core, RzCmdStateOutput *state) {

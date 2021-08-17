@@ -731,7 +731,6 @@ RZ_API const RzBinInfo *rz_bin_object_get_info(RzBinObject *obj) {
 RZ_API const RzList *rz_bin_object_get_libs(RzBinObject *obj) {
 	rz_return_val_if_fail(obj, NULL);
 	return obj->libs;
-
 }
 
 /**
@@ -750,7 +749,7 @@ static RzList *get_sections_or_segment(RzBinObject *obj, bool is_segment) {
 	const RzList *all = rz_bin_object_get_sections_all(obj);
 	RzListIter *it;
 	RzBinSection *sec;
-	rz_list_foreach(all, it, sec) {
+	rz_list_foreach (all, it, sec) {
 		if (sec->is_segment == is_segment) {
 			rz_list_append(res, sec);
 		}

@@ -1253,7 +1253,7 @@ RZ_API const RzBinPlugin *rz_bin_plugin_get(RzBin *bin, const char *name) {
 	RzBinPlugin *bp;
 
 	rz_list_foreach (bin->plugins, iter, bp) {
-		if (!strcmp (bp->name, name)) {
+		if (!strcmp(bp->name, name)) {
 			return bp;
 		}
 	}
@@ -1270,7 +1270,7 @@ RZ_API const RzBinXtrPlugin *rz_bin_xtrplugin_get(RzBin *bin, const char *name) 
 	RzBinXtrPlugin *bp;
 
 	rz_list_foreach (bin->binxtrs, iter, bp) {
-		if (!strcmp (bp->name, name)) {
+		if (!strcmp(bp->name, name)) {
 			return bp;
 		}
 	}
@@ -1287,7 +1287,7 @@ RZ_API const RzBinLdrPlugin *rz_bin_ldrplugin_get(RzBin *bin, const char *name) 
 	RzBinLdrPlugin *bp;
 
 	rz_list_foreach (bin->binldrs, iter, bp) {
-		if (!strcmp (bp->name, name)) {
+		if (!strcmp(bp->name, name)) {
 			return bp;
 		}
 	}
