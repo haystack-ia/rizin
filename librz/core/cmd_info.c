@@ -1312,6 +1312,65 @@ RZ_IPI RzCmdStatus rz_cmd_info_cur_section_handler(RzCore *core, int argc, const
 	return RZ_CMD_STATUS_OK;
 }
 
+RZ_IPI RzCmdStatus rz_cmd_info_section_bars_handler(RzCore *core, int argc, const char **argv) {
+	RzCmdStatus res = RZ_CMD_STATUS_ERROR;
+	RzBinObject *o = rz_bin_cur_object(core->bin);
+	if (!o) {
+		RZ_LOG_ERROR("No binary object at current address\n");
+		return RZ_CMD_STATUS_ERROR;
+	}
+
+	RzList *sections = rz_bin_object_get_sections(o);
+	if (!sections) {
+		RZ_LOG_ERROR("Cannot retrieve sections\n");
+		return RZ_CMD_STATUS_ERROR;
+	}
+
+	int cols = rz_cons_get_size(NULL);
+	RzList *list = rz_list_newf((RzListFree)rz_listinfo_free);
+	if (!list) {
+		goto sections_err;
+	}
+
+	RzListIter *iter;
+	RzBinSection *section;
+	rz_list_foreach (sections, iter, section) {
+		char humansz[8];
+		RzInterval pitv = (RzInterval){ section->paddr, section->size };
+		RzInterval vitv = (RzInterval){ section->vaddr, section->vsize };
+
+		rz_num_units(humansz, sizeof(humansz), section->size);
+		RzListInfo *info = rz_listinfo_new(section->name, pitv, vitv, section->perm, strdup(humansz));
+		if (!info) {
+			RZ_LOG_ERROR("Cannot print section bars\n");
+			goto list_err;
+		}
+		rz_list_append(list, info);
+	}
+	RzTable *table = rz_core_table(core);
+	if (!table) {
+		RZ_LOG_ERROR("Cannot print section bars\n");
+		goto list_err;
+	}
+	rz_table_visual_list(table, list, core->offset, -1, cols, core->io->va);
+
+	char *s = rz_table_tostring(table);
+	if (!s) {
+		RZ_LOG_ERROR("Cannot print section bars\n");
+		goto table_err;
+	}
+	rz_cons_printf("%s\n", s);
+	free(s);
+
+table_err:
+	rz_table_free(table);
+list_err:
+	rz_list_free(list);
+sections_err:
+	rz_list_free(sections);
+	return res;
+}
+
 RZ_IPI RzCmdStatus rz_cmd_info_segments_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
 	RzList *hashes = rz_list_new_from_array((const void **)argv + 1, argc - 1);
 	if (!hashes) {
