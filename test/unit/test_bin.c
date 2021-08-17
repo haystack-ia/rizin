@@ -40,14 +40,14 @@ bool test_rz_bin(void) {
 	RzBinImport *import;
 	RzListIter *it;
 	rz_list_foreach (imports, it, import) {
-		for(int i = 0; i < RZ_ARRAY_SIZE(import_names); ++i) {
+		for (int i = 0; i < RZ_ARRAY_SIZE(import_names); ++i) {
 			if (!strcmp(import->name, import_names[i])) {
 				has_import_names[i] = true;
 				break;
 			}
 		}
 	}
-	for(int i = 0; i < RZ_ARRAY_SIZE(import_names); ++i) {
+	for (int i = 0; i < RZ_ARRAY_SIZE(import_names); ++i) {
 		mu_assert_true(has_import_names[i], "Import name was not found");
 	}
 

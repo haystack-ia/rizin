@@ -349,7 +349,7 @@ out:
 RZ_API void rz_cmd_desc_set_default_mode(RzCmdDesc *cd, RzOutputMode mode) {
 	rz_return_if_fail(cd);
 
-	switch(cd->type) {
+	switch (cd->type) {
 	case RZ_CMD_DESC_TYPE_ARGV_MODES:
 		cd->d.argv_modes_data.default_mode = mode;
 		break;

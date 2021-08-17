@@ -2672,7 +2672,7 @@ RZ_IPI void rz_core_bin_segments_print(RzCore *core, RzCmdStateOutput *state, Rz
 	rz_cmd_state_output_array_start(state);
 	rz_cmd_state_output_set_columnsf(state, "XxXxssx", "paddr", "size", "vaddr", "vsize", "perm", "name", "align");
 
-	rz_list_foreach(hashes, iter, hashname) {
+	rz_list_foreach (hashes, iter, hashname) {
 		const RzMsgDigestPlugin *msg_plugin = rz_msg_digest_plugin_by_name(hashname);
 		if (msg_plugin) {
 			rz_cmd_state_output_set_columnsf(state, "s", msg_plugin->name);
