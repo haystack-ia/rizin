@@ -23,6 +23,13 @@ commands:
       - RZ_OUTPUT_MODE_JSON
       - RZ_OUTPUT_MODE_QUIET
     args: []
+  - name: ib
+    cname: cmd_bin_reload
+    summary: Reload the current buffer for setting of the bin (use once only)
+    args:
+      - name: baddr
+        type: RZ_CMD_ARG_TYPE_RZNUM
+        optional: true
   - name: ic
     cname: cmd_info_classes
     summary: List classes, methods and fields

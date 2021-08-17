@@ -496,6 +496,15 @@ RZ_IPI int rz_cmd_info_kuery(void *data, const char *input) {
 	return 0;
 }
 
+static void bin_reload_cmd(RzCore *core, ut64 baddr) {
+	// XXX: this will reload the bin using the buffer.
+	// An assumption is made that assumes there is an underlying
+	// plugin that will be used to load the bin (e.g. malloc://)
+	// TODO: Might be nice to reload a bin at a specified offset?
+	__r_core_bin_reload(core, NULL, baddr);
+	rz_core_block_read(core);
+}
+
 RZ_IPI int rz_cmd_info(void *data, const char *input) {
 	RzCore *core = (RzCore *)data;
 	bool newline = rz_cons_is_interactive();
@@ -582,12 +591,7 @@ RZ_IPI int rz_cmd_info(void *data, const char *input) {
 			if (input[1] == ' ') {
 				baddr = rz_num_math(core->num, input + 1);
 			}
-			// XXX: this will reload the bin using the buffer.
-			// An assumption is made that assumes there is an underlying
-			// plugin that will be used to load the bin (e.g. malloc://)
-			// TODO: Might be nice to reload a bin at a specified offset?
-			__r_core_bin_reload(core, NULL, baddr);
-			rz_core_block_read(core);
+			bin_reload_cmd(core, baddr);
 			newline = false;
 		} break;
 		case 'k': // "ik"
@@ -1708,5 +1712,11 @@ RZ_IPI RzCmdStatus rz_cmd_info_guess_size_handler(RzCore *core, int argc, const 
 		rz_warn_if_reached();
 		break;
 	}
+	return RZ_CMD_STATUS_OK;
+}
+
+RZ_IPI RzCmdStatus rz_cmd_bin_reload_handler(RzCore *core, int argc, const char **argv) {
+	ut64 baddr = argc > 1 ? rz_num_math(core->num, argv[1]) : rz_config_get_i(core->config, "bin.baddr");
+	bin_reload_cmd(core, baddr);
 	return RZ_CMD_STATUS_OK;
 }
