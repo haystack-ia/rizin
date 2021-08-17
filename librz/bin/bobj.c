@@ -810,7 +810,7 @@ RZ_API const RzList *rz_bin_object_get_symbols(RzBinObject *obj) {
  * \brief Remove all previously identified strings in the binary object and scan it again for strings.
  */
 RZ_API const RzList *rz_bin_object_reset_strings(RzBin *bin, RzBinFile *bf, RzBinObject *obj) {
-	rz_return_val_if_fail(obj, NULL);
+	rz_return_val_if_fail(bin && bf && obj, NULL);
 	if (obj->strings) {
 		rz_list_free(obj->strings);
 		obj->strings = NULL;

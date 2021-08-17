@@ -1243,6 +1243,9 @@ RZ_API void rz_bin_trycatch_free(RzBinTrycatch *tc) {
 	free(tc);
 }
 
+/**
+ * \brief Get a RzBinPlugin by name
+ */
 RZ_API const RzBinPlugin *rz_bin_plugin_get(RzBin *bin, const char *name) {
 	rz_return_val_if_fail(bin && name, NULL);
 
@@ -1257,6 +1260,9 @@ RZ_API const RzBinPlugin *rz_bin_plugin_get(RzBin *bin, const char *name) {
 	return NULL;
 }
 
+/**
+ * \brief Get a RzBinXtrPlugin by name
+ */
 RZ_API const RzBinXtrPlugin *rz_bin_xtrplugin_get(RzBin *bin, const char *name) {
 	rz_return_val_if_fail(bin && name, NULL);
 
@@ -1271,6 +1277,9 @@ RZ_API const RzBinXtrPlugin *rz_bin_xtrplugin_get(RzBin *bin, const char *name) 
 	return NULL;
 }
 
+/**
+ * \brief Get a RzBinLdrPlugin by name
+ */
 RZ_API const RzBinLdrPlugin *rz_bin_ldrplugin_get(RzBin *bin, const char *name) {
 	rz_return_val_if_fail(bin && name, NULL);
 
