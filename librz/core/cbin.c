@@ -2106,7 +2106,7 @@ RZ_IPI void rz_core_bin_entries_print(RzCore *core, RzCmdStateOutput *state) {
 }
 
 static bool isAnExport(RzBinSymbol *s) {
-	/* workaround for some bin plugs */
+	/* workaround for some RzBinPlugins */
 	if (s->is_imported) {
 		return false;
 	}
@@ -2356,6 +2356,7 @@ RZ_IPI void rz_core_bin_main_print(RzCore *core, RzCmdStateOutput *state) {
 }
 
 RZ_IPI void rz_core_bin_relocs_print(RzCore *core, RzCmdStateOutput *state) {
+	rz_return_if_fail(core && state);
 	RzBinFile *bf = rz_bin_cur(core->bin);
 	RzBinObject *o = bf ? bf->o : NULL;
 	if (!o) {
