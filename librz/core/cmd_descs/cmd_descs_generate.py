@@ -624,6 +624,7 @@ class CmdDesc:
     def __repr__(self):
         return self.str_tab()
 
+
 def createcd_typegroup(cd):
     if cd.exec_cd and cd.exec_cd.type == CD_TYPE_ARGV_MODES:
         formatted_string = DEFINE_GROUP_MODES_TEMPLATE.format(
