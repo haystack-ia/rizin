@@ -3598,6 +3598,58 @@ static inline bool is_java_lang(RzBinFile *bf) {
 	return strstr(lang, "dalvik") || strstr(lang, "java") || strstr(lang, "kotlin");
 }
 
+static void bin_class_print_rizin(RzCore *r, RzBinClass *c, ut64 at_min) {
+	RzListIter *iter2;
+	RzBinFile *bf = rz_bin_cur(r->bin);
+	RzBinField *f;
+	RzBinSymbol *sym;
+
+	// class
+	char *fn = rz_core_bin_class_build_flag_name(c);
+	if (fn) {
+		rz_cons_printf("\"f %s = 0x%" PFMT64x "\"\n", fn, at_min);
+		free(fn);
+	}
+
+	// super class
+	fn = rz_core_bin_super_build_flag_name(c);
+	if (fn) {
+		rz_cons_printf("\"f %s = %d\"\n", fn, c->index);
+		free(fn);
+	}
+
+	// class fields
+	rz_list_foreach (c->fields, iter2, f) {
+		char *fn = rz_core_bin_field_build_flag_name(c, f);
+		if (fn) {
+			rz_cons_printf("\"f %s = 0x%08" PFMT64x "\"\n", fn, f->vaddr);
+			free(fn);
+		}
+	}
+
+	// class methods
+	rz_list_foreach (c->methods, iter2, sym) {
+		char *fn = rz_core_bin_method_build_flag_name(c, sym);
+		if (fn) {
+			rz_cons_printf("\"f %s = 0x%" PFMT64x "\"\n", fn, sym->vaddr);
+			free(fn);
+		}
+	}
+
+	// C struct
+	if (!(bf->o->lang == RZ_BIN_NM_JAVA || (bf->o->info && bf->o->info->lang && strstr(bf->o->info->lang, "dalvik")))) {
+		rz_cons_printf("td \"struct %s {", c->name);
+		rz_list_foreach (c->fields, iter2, f) {
+			char *n = objc_name_toc(f->name);
+			char *t = objc_type_toc(f->type);
+			rz_cons_printf(" %s %s;", t, n);
+			free(t);
+			free(n);
+		}
+		rz_cons_printf("};\"\n");
+	}
+}
+
 RZ_IPI void rz_core_bin_classes_print(RzCore *core, RzCmdStateOutput *state) {
 	RzListIter *iter, *iter2, *iter3;
 	RzBinSymbol *sym;
@@ -3673,6 +3725,9 @@ RZ_IPI void rz_core_bin_classes_print(RzCore *core, RzCmdStateOutput *state) {
 			}
 			pj_end(state->d.pj);
 			pj_end(state->d.pj);
+			break;
+		case RZ_OUTPUT_MODE_RIZIN:
+			bin_class_print_rizin(core, c, at_min);
 			break;
 		case RZ_OUTPUT_MODE_TABLE:
 			rz_table_add_rowf(state->d.t, "XXXss", c->addr, at_min, at_max, c->name, c->super);
@@ -4849,52 +4904,7 @@ static int bin_classes(RzCore *r, PJ *pj, int mode) {
 				}
 			}
 		} else if (IS_MODE_RZCMD(mode)) {
-			RzBinFile *bf = rz_bin_cur(r->bin);
-
-			// class
-			char *fn = rz_core_bin_class_build_flag_name(c);
-			if (fn) {
-				rz_cons_printf("\"f %s = 0x%" PFMT64x "\"\n", fn, at_min);
-				free(fn);
-			}
-
-			// super class
-			fn = rz_core_bin_super_build_flag_name(c);
-			if (fn) {
-				rz_cons_printf("\"f %s = %d\"\n", fn, c->index);
-				free(fn);
-			}
-
-			// class fields
-			rz_list_foreach (c->fields, iter2, f) {
-				char *fn = rz_core_bin_field_build_flag_name(c, f);
-				if (fn) {
-					rz_cons_printf("\"f %s = 0x%08" PFMT64x "\"\n", fn, f->vaddr);
-					free(fn);
-				}
-			}
-
-			// class methods
-			rz_list_foreach (c->methods, iter2, sym) {
-				char *fn = rz_core_bin_method_build_flag_name(c, sym);
-				if (fn) {
-					rz_cons_printf("\"f %s = 0x%" PFMT64x "\"\n", fn, sym->vaddr);
-					free(fn);
-				}
-			}
-
-			// C struct
-			if (!(bf->o->lang == RZ_BIN_NM_JAVA || (bf->o->info && bf->o->info->lang && strstr(bf->o->info->lang, "dalvik")))) {
-				rz_cons_printf("td \"struct %s {", c->name);
-				rz_list_foreach (c->fields, iter2, f) {
-					char *n = objc_name_toc(f->name);
-					char *t = objc_type_toc(f->type);
-					rz_cons_printf(" %s %s;", t, n);
-					free(t);
-					free(n);
-				}
-				rz_cons_printf("};\"\n");
-			}
+			bin_class_print_rizin(r, c, at_min);
 		} else if (IS_MODE_JSON(mode)) {
 			pj_o(pj);
 			pj_ks(pj, "classname", c->name);
