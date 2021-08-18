@@ -2557,11 +2557,10 @@ static void sections_print_table(RzCore *core, RzTable *t, RzBinObject *o, RzBin
 		rz_list_free(section_flags);
 	}
 
-	rz_table_add_rowf(t, "XxXxss", section->paddr, section->size, addr, section->vsize, perms, section->name);
+	rz_table_add_rowf(t, "XxXxxss", section->paddr, section->size, addr, section->vsize, section->align, perms, section->name);
 	if (!section->is_segment) {
 		rz_table_add_row_columnsf(t, "ss", section_type, section_flags_str);
 	}
-	rz_table_add_row_columnsf(t, "x", section->align);
 	if (hashes && section->size > 0) {
 		ut8 *data = malloc(section->size);
 		if (data) {
@@ -2593,7 +2592,7 @@ static void sections_headers_setup(RzCore *core, RzCmdStateOutput *state, RzList
 	RzListIter *iter;
 	char *hashname;
 
-	rz_cmd_state_output_set_columnsf(state, "XxXxssssx", "paddr", "size", "vaddr", "vsize", "perm", "name", "type", "flags", "align");
+	rz_cmd_state_output_set_columnsf(state, "XxXxssssx", "paddr", "size", "vaddr", "vsize", "align", "perm", "name", "type", "flags");
 
 	rz_list_foreach (hashes, iter, hashname) {
 		const RzMsgDigestPlugin *msg_plugin = rz_msg_digest_plugin_by_name(hashname);
